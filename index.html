@@ -6,730 +6,525 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>安全检测</title>
+<title>Terminal</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
     height: 100%; width: 100%; overflow: hidden;
-    touch-action: manipulation;
+    background: #0a0a0a; color: #0f0;
+    font-family: "Courier New", "Menlo", "Monaco", "Consolas", "Liberation Mono", monospace;
+    font-size: 13px; line-height: 1.6;
     user-select: none; -webkit-user-select: none;
     -webkit-touch-callout: none;
     -webkit-tap-highlight-color: transparent;
-    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: #000;
   }
 
-  /* ====== 阶段一：系统警告 ====== */
-  #phase1 {
-    display: flex; flex-direction: column; height: 100%;
-    background: #f2f2f7; color: #1c1c1e;
+  #terminal {
+    height: 100%; overflow-y: auto; padding: 12px;
+    -webkit-overflow-scrolling: touch;
   }
-  .status-bar {
-    background: #f2f2f7; padding: 8px 20px 4px;
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 12px; font-weight: 600; color: #1c1c1e;
+
+  .line {
+    white-space: pre-wrap; word-break: break-all;
+    min-height: 1.4em;
   }
-  .status-bar .time { font-size: 14px; font-weight: 700; }
-  .status-bar .icons { display: flex; gap: 4px; font-size: 11px; }
-  .nav-bar {
-    background: #f2f2f7; padding: 8px 16px 12px;
-    display: flex; align-items: center; gap: 8px;
-    border-bottom: 1px solid #d1d1d6;
+  .line.green { color: #0f0; }
+  .line.dim { color: #0a0; }
+  .line.yellow { color: #ff0; }
+  .line.red { color: #f33; }
+  .line.cyan { color: #0ff; }
+  .line.gray { color: #555; }
+
+  .prompt { color: #0f0; display: inline; }
+  .cursor {
+    display: inline-block; width: 8px; height: 14px;
+    background: #0f0; animation: blink 0.8s step-end infinite;
+    vertical-align: middle; margin-left: 2px;
   }
-  .nav-back { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #007aff; }
-  .nav-title { font-size: 17px; font-weight: 600; flex: 1; text-align: center; margin-right: 28px; }
-  .warning-content {
-    flex: 1; overflow-y: auto; padding: 20px;
-    display: flex; flex-direction: column; align-items: center;
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  #input-area {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #0a0a0a; padding: 8px 12px 16px;
+    border-top: 1px solid #1a1a1a;
+    display: flex; align-items: center; gap: 6px;
+    z-index: 10;
   }
-  .shield-icon {
-    width: 70px; height: 70px;
-    background: linear-gradient(135deg, #ff3b30, #ff6b6b);
-    border-radius: 20px;
+  #input-area .ps1 { color: #0f0; font-size: 13px; white-space: nowrap; }
+  #cmd-input {
+    flex: 1; background: transparent; border: none; color: #0f0;
+    font-family: inherit; font-size: 13px; outline: none;
+    caret-color: #0f0;
+  }
+  #cmd-input::placeholder { color: #333; }
+
+  /* 覆盖层 */
+  .overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.85);
     display: flex; align-items: center; justify-content: center;
-    font-size: 36px; margin: 20px 0 16px;
-    box-shadow: 0 4px 20px rgba(255,59,48,0.4);
-    animation: shieldPulse 2s ease-in-out infinite;
+    flex-direction: column;
   }
-  @keyframes shieldPulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 4px 20px rgba(255,59,48,0.4); }
-    50% { transform: scale(1.05); box-shadow: 0 6px 28px rgba(255,59,48,0.6); }
-  }
-  .alert-title { font-size: 20px; font-weight: 700; color: #ff3b30; text-align: center; margin-bottom: 6px; }
-  .alert-subtitle { font-size: 14px; color: #8e8e93; text-align: center; margin-bottom: 20px; }
-  .threat-list {
-    width: 100%; background: #fff; border-radius: 12px; overflow: hidden;
-    margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  }
-  .threat-item {
-    display: flex; align-items: center; padding: 14px 16px;
-    border-bottom: 1px solid #f2f2f7; gap: 12px;
-  }
-  .threat-item:last-child { border-bottom: none; }
-  .threat-icon {
-    width: 36px; height: 36px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; flex-shrink: 0;
-  }
-  .threat-icon.red { background: #ffe5e5; }
-  .threat-icon.orange { background: #fff3e0; }
-  .threat-icon.yellow { background: #fffde7; }
-  .threat-info { flex: 1; }
-  .threat-name { font-size: 15px; font-weight: 600; color: #1c1c1e; }
-  .threat-desc { font-size: 12px; color: #8e8e93; margin-top: 2px; }
-  .threat-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px; color: #fff; background: #ff3b30; }
-  .urgent-banner {
-    width: 100%; background: #fff3e0; border-radius: 10px;
-    padding: 12px 16px; display: flex; align-items: center; gap: 10px;
-    font-size: 13px; font-weight: 600; color: #e65100; margin-bottom: 16px;
-  }
+  .overlay.hidden { display: none; }
 
-  /* 逃跑按钮 */
-  #run-btn {
-    position: fixed; z-index: 999;
-    padding: 16px 48px; font-size: 17px; font-weight: 700;
-    color: #fff; background: linear-gradient(135deg, #ff3b30, #d63031);
-    border: none; border-radius: 14px; cursor: pointer;
-    box-shadow: 0 4px 16px rgba(255,59,48,0.5);
-    left: 50%; bottom: 100px; transform: translateX(-50%);
-    white-space: nowrap; transition: none; letter-spacing: 1px;
+  .overlay-box {
+    background: #111; border: 1px solid #333; border-radius: 4px;
+    padding: 24px; max-width: 300px; text-align: center;
   }
-  #run-btn:active { opacity: 0.8; transform: translateX(-50%) scale(0.96); }
-  .bottom-safe { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #aeaeb2; z-index: 50; }
+  .overlay-box .title { color: #f33; font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .overlay-box .msg { color: #888; font-size: 13px; line-height: 1.6; margin-bottom: 16px; }
+  .overlay-box .btn {
+    display: block; width: 100%; padding: 10px; margin-top: 8px;
+    font-size: 13px; font-weight: 700; font-family: inherit;
+    border: 1px solid #333; border-radius: 4px;
+    cursor: pointer; background: #111; color: #0f0;
+  }
+  .overlay-box .btn.danger { color: #f33; border-color: #f33; }
+  .overlay-box .btn:hover, .overlay-box .btn:active { background: #1a1a1a; }
 
-  /* 嘲讽 */
-  .taunt {
-    position: fixed; font-size: 15px; font-weight: 700; color: #ff3b30;
-    z-index: 1000; pointer-events: none;
-    animation: floatUp 1.5s ease-out forwards;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  /* 进度条 */
+  #progress-wrap {
+    display: none; position: fixed; bottom: 46px; left: 12px; right: 12px;
+    z-index: 5;
   }
-  @keyframes floatUp {
-    0% { opacity: 1; transform: translateY(0) scale(0.8); }
-    30% { opacity: 1; transform: translateY(-20px) scale(1.1); }
-    100% { opacity: 0; transform: translateY(-80px) scale(1); }
+  #progress-wrap .label { color: #555; font-size: 11px; margin-bottom: 2px; font-family: inherit; }
+  #progress-bar {
+    height: 3px; background: #1a1a1a; border-radius: 1px;
+    overflow: hidden;
   }
-  .flash-overlay {
-    position: fixed; inset: 0; z-index: 998; pointer-events: none;
-    animation: flash 0.3s ease-out;
-  }
-  @keyframes flash {
-    0% { background: rgba(255,0,0,0.3); }
-    5% { background: rgba(255,0,0,0.5); }
-    100% { background: rgba(255,0,0,0); }
-  }
-
-  /* ====== 阶段二：扫描 ====== */
-  #phase2 {
-    display: none; flex-direction: column; height: 100%;
-    background: #0a0a0a; color: #0f0;
-    font-family: "Courier New", "Menlo", monospace;
-    padding: 20px; overflow-y: auto;
-  }
-  #phase2 .scan-header {
-    text-align: center; font-size: 14px; color: #0a0;
-    margin-bottom: 20px; letter-spacing: 2px;
-  }
-  #phase2 .scan-line {
-    font-size: 11px; line-height: 1.8; color: #0f0;
-    opacity: 0; animation: typeIn 0.05s forwards;
-  }
-  @keyframes typeIn { to { opacity: 1; } }
-  #phase2 .scan-line.warn { color: #ff0; }
-  #phase2 .scan-line.danger { color: #f00; }
-  #phase2 .scan-progress {
-    width: 100%; height: 4px; background: #1a1a1a;
-    border-radius: 2px; margin: 16px 0; overflow: hidden;
-  }
-  #phase2 .scan-progress-bar {
+  #progress-bar .fill {
     height: 100%; background: #0f0; width: 0%;
-    transition: width 0.3s; border-radius: 2px;
+    transition: width 0.3s;
+    border-radius: 1px;
   }
 
-  /* ====== 阶段三：病毒结果 ====== */
-  #phase3 {
-    display: none; flex-direction: column; height: 100%;
-    background: #f2f2f7; overflow-y: auto;
-  }
-  #phase3 .result-top {
-    background: linear-gradient(180deg, #ff3b30 0%, #ff6b6b 100%);
-    padding: 30px 20px 24px; text-align: center; color: #fff;
-    position: relative; overflow: hidden;
-  }
-  #phase3 .result-top::before {
-    content: ''; position: absolute; inset: 0;
-    background: 
-      radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 70%, rgba(255,255,255,0.08) 0%, transparent 50%);
-    animation: shimmer 3s ease-in-out infinite;
-  }
-  @keyframes shimmer {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
-  }
-  #phase3 .result-icon { font-size: 56px; margin-bottom: 8px; position: relative; z-index: 1; }
-  #phase3 .result-title { font-size: 20px; font-weight: 800; position: relative; z-index: 1; }
-  #phase3 .result-count { font-size: 56px; font-weight: 900; line-height: 1; position: relative; z-index: 1; }
-  #phase3 .result-sub { font-size: 14px; opacity: 0.9; position: relative; z-index: 1; }
-
-  #phase3 .result-body { padding: 20px; }
-  #phase3 .section-title {
-    font-size: 16px; font-weight: 700; color: #1c1c1e;
-    margin: 16px 0 10px; display: flex; align-items: center; gap: 8px;
-  }
-  #phase3 .virus-card {
-    background: #fff; border-radius: 12px; overflow: hidden;
-    margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    border-left: 4px solid #ff3b30;
-    transition: transform 0.2s;
-  }
-  #phase3 .virus-card.mid { border-left-color: #ff9500; }
-  #phase3 .virus-card.low { border-left-color: #ffd60a; }
-  #phase3 .virus-card:active { transform: scale(0.98); }
-  #phase3 .virus-card-header {
-    display: flex; align-items: center; padding: 14px 16px; gap: 12px;
-  }
-  #phase3 .virus-card-icon { font-size: 28px; flex-shrink: 0; }
-  #phase3 .virus-card-info { flex: 1; }
-  #phase3 .virus-card-name { font-size: 15px; font-weight: 700; color: #1c1c1e; }
-  #phase3 .virus-card-desc { font-size: 12px; color: #8e8e93; margin-top: 2px; }
-  #phase3 .virus-card-badge {
-    font-size: 11px; font-weight: 700; padding: 4px 10px;
-    border-radius: 10px; color: #fff;
-  }
-  .badge-high { background: #ff3b30; }
-  .badge-mid { background: #ff9500; }
-  .badge-low { background: #ffd60a; color: #1c1c1e; }
-
-  #phase3 .danger-stats {
-    display: flex; gap: 10px; margin-bottom: 16px;
-  }
-  #phase3 .stat-box {
-    flex: 1; background: #fff; border-radius: 10px;
-    padding: 14px 12px; text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  }
-  #phase3 .stat-num {
-    font-size: 28px; font-weight: 900; color: #ff3b30;
-  }
-  #phase3 .stat-label { font-size: 11px; color: #8e8e93; margin-top: 4px; }
-
-  #phase3 .fix-btn {
-    display: block; width: 100%; padding: 16px;
-    font-size: 17px; font-weight: 700; color: #fff;
-    background: #007aff; border: none; border-radius: 14px;
-    cursor: pointer; margin-top: 8px; letter-spacing: 1px;
-    box-shadow: 0 4px 12px rgba(0,122,255,0.3);
-  }
-  #phase3 .fix-btn:active { opacity: 0.8; }
-
-  /* ====== 阶段四：揭晓 ====== */
-  #phase4 {
-    display: none; flex-direction: column; align-items: center;
-    justify-content: center; height: 100%;
-    background: #1c1c1e; padding: 24px; text-align: center;
-  }
-  #phase4 .big-emoji { font-size: 80px; margin-bottom: 20px; animation: bounce 0.5s ease infinite alternate; }
-  @keyframes bounce {
-    from { transform: translateY(0) rotate(-3deg); }
-    to { transform: translateY(-15px) rotate(3deg); }
-  }
-  #phase4 .reveal-title { font-size: 30px; font-weight: 900; color: #ffd60a; margin-bottom: 10px; }
-  #phase4 .reveal-sub { font-size: 15px; color: #98989d; line-height: 1.7; }
-  #phase4 .reveal-sub strong { color: #ffd60a; }
-
-  /* 退出弹窗 */
-  #exit-dialog {
-    display: none; position: fixed; inset: 0; z-index: 2000;
-    background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
-  }
-  #exit-dialog.show { display: flex; }
-  #exit-dialog .dialog-box {
-    background: #fff; border-radius: 14px; padding: 24px 20px;
-    width: 280px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-  }
-  #exit-dialog .dialog-icon { font-size: 40px; margin-bottom: 12px; }
-  #exit-dialog .dialog-title { font-size: 17px; font-weight: 700; color: #1c1c1e; margin-bottom: 6px; }
-  #exit-dialog .dialog-msg { font-size: 13px; color: #8e8e93; margin-bottom: 20px; line-height: 1.5; }
-  #exit-dialog .dialog-btn { display: block; width: 100%; padding: 12px; font-size: 16px; font-weight: 600; border: none; border-radius: 10px; cursor: pointer; margin-top: 8px; }
-  #exit-dialog .dialog-btn.primary { background: #007aff; color: #fff; }
-  #exit-dialog .dialog-btn.danger { background: #ff3b30; color: #fff; }
-
+  /* 彩纸 */
   .confetti {
-    position: fixed; width: 10px; height: 10px;
-    border-radius: 2px; z-index: 200; pointer-events: none;
+    position: fixed; width: 8px; height: 8px;
+    z-index: 200; pointer-events: none;
   }
 </style>
 </head>
 <body>
 
-<!-- 阶段一 -->
-<div id="phase1">
-  <div class="status-bar">
-    <span class="time" id="clock">12:00</span>
-    <span class="icons">📶 🔋</span>
-  </div>
-  <div class="nav-bar">
-    <span class="nav-back">‹</span>
-    <span class="nav-title">手机安全中心</span>
-  </div>
-  <div class="warning-content">
-    <div class="shield-icon">🛡️</div>
-    <div class="alert-title">⚠️ 检测到安全威胁</div>
-    <div class="alert-subtitle">您的设备存在严重安全风险，请立即处理</div>
-    <div class="threat-list">
-      <div class="threat-item">
-        <div class="threat-icon red">🦠</div>
-        <div class="threat-info">
-          <div class="threat-name">恶意软件感染</div>
-          <div class="threat-desc">检测到 2 个可疑应用程序</div>
-        </div>
-        <div class="threat-badge">高危</div>
-      </div>
-      <div class="threat-item">
-        <div class="threat-icon orange">🔓</div>
-        <div class="threat-info">
-          <div class="threat-name">隐私数据泄露</div>
-          <div class="threat-desc">通讯录、相册存在泄露风险</div>
-        </div>
-        <div class="threat-badge">高危</div>
-      </div>
-      <div class="threat-item">
-        <div class="threat-icon yellow">📡</div>
-        <div class="threat-info">
-          <div class="threat-name">网络连接异常</div>
-          <div class="threat-desc">检测到可疑网络流量</div>
-        </div>
-        <div class="threat-badge" style="background:#ff9500">中危</div>
-      </div>
-    </div>
-    <div class="urgent-banner">⚡ 建议立即修复以上问题，以免造成数据丢失</div>
-  </div>
-  <button id="run-btn">立即一键修复</button>
-  <div class="bottom-safe" id="counter"></div>
+<div id="terminal"></div>
+
+<div id="progress-wrap">
+  <div class="label">[SCANNING]</div>
+  <div id="progress-bar"><div class="fill"></div></div>
 </div>
 
-<!-- 阶段二 -->
-<div id="phase2">
-  <div class="scan-header">▌ 深度安全扫描中... ▌</div>
-  <div class="scan-progress"><div class="scan-progress-bar" id="scan-bar"></div></div>
-  <div id="scan-output"></div>
+<div id="input-area">
+  <span class="ps1">$</span>
+  <input id="cmd-input" placeholder="输入命令..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
 </div>
 
-<!-- 阶段三 -->
-<div id="phase3">
-  <div class="result-top">
-    <div class="result-icon">🚨</div>
-    <div class="result-title">扫描完成！</div>
-    <div class="result-count">47</div>
-    <div class="result-sub">个安全风险项</div>
-  </div>
-  <div class="result-body">
-    <div class="danger-stats">
-      <div class="stat-box"><div class="stat-num">31</div><div class="stat-label">🔴 高危</div></div>
-      <div class="stat-box"><div class="stat-num" style="color:#ff9500">12</div><div class="stat-label">🟠 中危</div></div>
-      <div class="stat-box"><div class="stat-num" style="color:#ffd60a">4</div><div class="stat-label">🟡 低危</div></div>
-    </div>
-
-    <div class="section-title">🔴 高危威胁</div>
-
-    <div class="virus-card">
-      <div class="virus-card-header">
-        <div class="virus-card-icon">🐛</div>
-        <div class="virus-card-info">
-          <div class="virus-card-name">Trojan.Android.FakeApp</div>
-          <div class="virus-card-desc">伪装成系统应用，窃取银行密码</div>
-        </div>
-        <div class="virus-card-badge badge-high">高危</div>
-      </div>
-    </div>
-
-    <div class="virus-card">
-      <div class="virus-card-header">
-        <div class="virus-card-icon">👁️</div>
-        <div class="virus-card-info">
-          <div class="virus-card-name">Spyware.KeyLogger.v3</div>
-          <div class="virus-card-desc">记录所有键盘输入，包括密码</div>
-        </div>
-        <div class="virus-card-badge badge-high">高危</div>
-      </div>
-    </div>
-
-    <div class="virus-card">
-      <div class="virus-card-header">
-        <div class="virus-card-icon">🎣</div>
-        <div class="virus-card-info">
-          <div class="virus-card-name">Phishing.Payload.v7</div>
-          <div class="virus-card-desc">伪造银行页面，窃取账号信息</div>
-        </div>
-        <div class="virus-card-badge badge-high">高危</div>
-      </div>
-    </div>
-
-    <div class="section-title">🟠 中危威胁</div>
-
-    <div class="virus-card mid">
-      <div class="virus-card-header">
-        <div class="virus-card-icon">💣</div>
-        <div class="virus-card-info">
-          <div class="virus-card-name">Adware.Popup.Bomb</div>
-          <div class="virus-card-desc">弹出大量广告，消耗流量</div>
-        </div>
-        <div class="virus-card-badge badge-mid">中危</div>
-      </div>
-    </div>
-
-    <div class="virus-card mid">
-      <div class="virus-card-header">
-        <div class="virus-card-icon">🕳️</div>
-        <div class="virus-card-info">
-          <div class="virus-card-name">Exploit.WebView.Leak</div>
-          <div class="virus-card-desc">利用浏览器漏洞上传数据</div>
-        </div>
-        <div class="virus-card-badge badge-mid">中危</div>
-      </div>
-    </div>
-
-    <button class="fix-btn" id="deep-fix-btn">🔧 立即深度清理（免费）</button>
-  </div>
-</div>
-
-<!-- 阶段四 -->
-<div id="phase4">
-  <div class="big-emoji">🤡</div>
-  <div class="reveal-title">哈哈哈哈你被骗了！</div>
-  <div class="reveal-sub">
-    你的手机 <strong>根本没毒</strong>，<br>
-    这一切都是假的！<br><br>
-    被耍了 <strong id="final-count">0</strong> 次还没发现？<br><br>
-    <span style="font-size:13px;color:#666">—— 来自你最好的朋友的恶作剧 😈</span>
-  </div>
-</div>
-
-<!-- 退出拦截弹窗 -->
-<div id="exit-dialog">
-  <div class="dialog-box">
-    <div class="dialog-icon">⚠️</div>
-    <div class="dialog-title">确定要离开吗？</div>
-    <div class="dialog-msg">
-      安全扫描尚未完成，<br>离开可能导致数据<strong style="color:#ff3b30">永久丢失</strong>！
-    </div>
-    <button class="dialog-btn primary" id="stay-btn">继续修复</button>
-    <button class="dialog-btn danger" id="leave-btn">仍要离开</button>
+<div id="exit-overlay" class="overlay hidden">
+  <div class="overlay-box">
+    <div class="title" id="exit-title">⚠ WARNING</div>
+    <div class="msg" id="exit-msg">扫描尚未完成，退出可能导致数据损坏。</div>
+    <button class="btn" id="stay-btn">[ stay ] 继续扫描</button>
+    <button class="btn danger" id="leave-btn">[ exit ] 强制退出</button>
   </div>
 </div>
 
 <script>
-// ============ 全局变量 ============
-let attempts = 0;
-let currentPhase = 1;
+// ============ 终端引擎 ============
+const term = document.getElementById('terminal');
+const input = document.getElementById('cmd-input');
+const progressWrap = document.getElementById('progress-wrap');
+const progressFill = document.querySelector('#progress-bar .fill');
+const exitOverlay = document.getElementById('exit-overlay');
+const exitTitle = document.getElementById('exit-title');
+const exitMsg = document.getElementById('exit-msg');
+const stayBtn = document.getElementById('stay-btn');
+const leaveBtn = document.getElementById('leave-btn');
+
+let exitAttempts = 0;
+let scanPhase = 0;
+let scanAttempts = 0;
 let revealed = false;
-const MAX_ATTEMPTS = 5;
-const MAX_PHASE3_ATTEMPTS = 3;
+let locked = false;
+const MAX_SCANS = 4;
 
-const taunts = [
-  '没点到～再来！😏',
-  '差一点！继续努力 💪',
-  '你认真的吗？🤔',
-  '手指太慢了兄弟 🐢',
-  '哈哈哈哈放弃吧！',
-  '我快被你逗死了 😂',
-  '你行不行啊？',
-  '最后一次警告你...',
-];
-
-// ============ 时钟 ============
-function updateClock() {
-  const now = new Date();
-  document.getElementById('clock').textContent =
-    now.getHours().toString().padStart(2,'0') + ':' +
-    now.getMinutes().toString().padStart(2,'0');
+// ============ 输出到终端 ============
+function print(text, cls, delay) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.className = 'line' + (cls ? ' ' + cls : '');
+      div.textContent = text;
+      term.appendChild(div);
+      term.scrollTop = term.scrollHeight;
+      resolve();
+    }, delay);
+  });
 }
-updateClock();
-setInterval(updateClock, 30000);
+
+async function printLines(lines, startDelay) {
+  let d = startDelay || 0;
+  for (const l of lines) {
+    await print(l.text, l.cls, d);
+    d += l.delay || 200;
+  }
+  return d;
+}
 
 // ============ 返回键拦截 ============
-for (let i = 0; i < 30; i++) {
-  history.pushState({ step: i }, '', window.location.href);
+function lockHistory() {
+  locked = true;
+  // 塞入大量历史记录
+  for (let i = 0; i < 80; i++) {
+    history.pushState({ step: i, locked: true }, '', '#' + i);
+  }
+  history.replaceState({ locked: true }, '', '#' + Math.random());
 }
-history.pushState({ step: 'locked' }, '', window.location.href);
+
+lockHistory();
 
 window.addEventListener('popstate', function(e) {
   if (revealed) return;
-  history.pushState({ step: 'locked' }, '', window.location.href);
+  // 重新锁住
+  history.pushState({ locked: true }, '', '#' + Date.now());
   showExitDialog();
-});
-history.pushState({ step: 'locked' }, '', window.location.href);
-
-// ============ 退出弹窗 ============
-let leaveAttempts = 0;
-function showExitDialog() {
-  document.getElementById('exit-dialog').classList.add('show');
-  if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-}
-
-document.getElementById('stay-btn').addEventListener('click', function() {
-  document.getElementById('exit-dialog').classList.remove('show');
-  history.pushState({ step: 'locked' }, '', window.location.href);
+  if (navigator.vibrate) navigator.vibrate([100, 40, 100]);
 });
 
-document.getElementById('leave-btn').addEventListener('click', function() {
-  leaveAttempts++;
-  document.getElementById('exit-dialog').classList.remove('show');
-
-  if (leaveAttempts >= 3) {
-    revealed = true;
-    for (let i = 0; i < 35; i++) history.back();
-    setTimeout(() => { window.location.href = 'about:blank'; }, 100);
-    return;
-  }
-
-  const title = document.querySelector('#exit-dialog .dialog-title');
-  const msg = document.querySelector('#exit-dialog .dialog-msg');
-  const btn = document.getElementById('leave-btn');
-
-  if (leaveAttempts === 1) {
-    title.textContent = '⚠️ 最后一次警告！';
-    msg.innerHTML = '您的个人数据将被<strong style="color:#ff3b30">彻底删除</strong>！<br>包括照片、通讯录、聊天记录！';
-    btn.textContent = '我不管，就要离开';
-    btn.style.background = '#000';
-  } else {
-    msg.innerHTML = '你确定吗？<strong style="color:#ff3b30">真的确定吗？</strong><br>手机会变砖的！！！';
-    btn.textContent = '我偏要走！';
-  }
-
-  setTimeout(() => {
-    document.getElementById('exit-dialog').classList.add('show');
-    if (navigator.vibrate) navigator.vibrate([200, 50, 200, 50, 500]);
-  }, 400);
-});
-
-// ============ 页面离开拦截 ============
+// 页面离开拦截
 window.addEventListener('beforeunload', function(e) {
   if (revealed) return;
   e.preventDefault();
-  e.returnValue = '安全扫描未完成！';
-  return e.returnValue;
+  e.returnValue = '';
+  return '';
+});
+
+// 页面隐藏时也拦截
+window.addEventListener('pagehide', function(e) {
+  if (revealed) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
+
+// 可见性变化
+document.addEventListener('visibilitychange', function() {
+  if (revealed) return;
+  if (document.hidden) {
+    // 尽可能阻止
+    history.pushState({ locked: true }, '', '#' + Date.now());
+  }
+});
+
+// 定期重新锁定
+setInterval(() => {
+  if (revealed) return;
+  if (history.length < 50) {
+    for (let i = 0; i < 20; i++) {
+      history.pushState({ locked: true }, '', '#' + Date.now());
+    }
+  }
+}, 5000);
+
+// ============ 退出弹窗 ============
+function showExitDialog() {
+  exitAttempts++;
+  exitOverlay.classList.remove('hidden');
+
+  if (exitAttempts >= 5) {
+    // 放行
+    exitTitle.textContent = '...';
+    exitMsg.textContent = '好吧，你赢了。';
+    leaveBtn.textContent = '[ exit ] 退出';
+    revealed = true;
+    return;
+  }
+
+  const msgs = [
+    '扫描尚未完成，退出可能导致数据损坏。',
+    '警告：检测到活跃的后门连接，请不要退出！',
+    '危险：强制退出将触发系统保护机制，可能导致数据永久丢失！',
+    '最后一次警告：你的个人信息正在被窃取，退出将无法恢复！',
+  ];
+  exitMsg.textContent = msgs[Math.min(exitAttempts - 1, 3)];
+  exitTitle.textContent = exitAttempts < 3 ? '⚠ WARNING' : '🚫 CRITICAL';
+  leaveBtn.textContent = exitAttempts < 4 ? `[ exit ] 强制退出 (${exitAttempts}/5)` : '[ exit ] 我不管了！';
+}
+
+stayBtn.addEventListener('click', function() {
+  exitOverlay.classList.add('hidden');
+  history.pushState({ locked: true }, '', '#' + Date.now());
+});
+
+leaveBtn.addEventListener('click', function() {
+  if (revealed) {
+    exitOverlay.classList.add('hidden');
+    for (let i = 0; i < 100; i++) history.back();
+    setTimeout(() => { window.close(); }, 100);
+    return;
+  }
+  exitOverlay.classList.add('hidden');
+  showExitDialog();
 });
 
 // ============ 全屏 ============
-function requestFullscreen() {
+function goFullscreen() {
   const el = document.documentElement;
-  if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
-  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  try {
+    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  } catch(e) {}
 }
-document.addEventListener('touchstart', requestFullscreen, { once: true });
-document.addEventListener('click', requestFullscreen, { once: true });
+document.addEventListener('click', goFullscreen, { once: true });
+document.addEventListener('touchstart', goFullscreen, { once: true });
 
-// ============ 振动 ============
-function vibrate(pattern) {
-  if (navigator.vibrate) navigator.vibrate(pattern);
+// ============ 震动 ============
+function vib(p) { if (navigator.vibrate) navigator.vibrate(p); }
+
+// ============ 初始化终端 ============
+async function initTerminal() {
+  await printLines([
+    { text: '>>> SYSTEM INITIALIZATION v3.2.1 <<<', cls: 'cyan', delay: 300 },
+    { text: 'kernel: Linux 5.15.0-android', cls: 'dim', delay: 200 },
+    { text: 'arch: aarch64', cls: 'dim', delay: 150 },
+    { text: 'shell: bash 5.2', cls: 'dim', delay: 150 },
+    { text: '', cls: 'dim', delay: 100 },
+    { text: '[INFO] 正在连接安全服务中心...', cls: 'green', delay: 400 },
+    { text: '[INFO] 已建立加密通道 (TLS 1.3)', cls: 'green', delay: 300 },
+    { text: '[INFO] 加载病毒特征库: 2,847,391 条', cls: 'green', delay: 300 },
+    { text: '', cls: 'dim', delay: 200 },
+    { text: '╔══════════════════════════════════════╗', cls: 'yellow', delay: 150 },
+    { text: '║  ⚠ SECURITY ALERT - 系统安全警报    ║', cls: 'yellow', delay: 150 },
+    { text: '╚══════════════════════════════════════╝', cls: 'yellow', delay: 150 },
+    { text: '', cls: 'dim', delay: 100 },
+    { text: '检测到以下安全威胁:', cls: 'red', delay: 300 },
+    { text: '  [HIGH]   恶意软件感染 (2个)', cls: 'red', delay: 200 },
+    { text: '  [HIGH]   隐私数据泄露风险', cls: 'red', delay: 200 },
+    { text: '  [MEDIUM] 网络流量异常', cls: 'yellow', delay: 200 },
+    { text: '  [MEDIUM] 未授权后台进程', cls: 'yellow', delay: 200 },
+    { text: '', cls: 'dim', delay: 150 },
+    { text: '输入 scan 开始深度扫描，或输入 exit 退出', cls: 'dim', delay: 300 },
+    { text: '', cls: 'dim', delay: 100 },
+  ]);
 }
 
-// ============ 红闪 ============
-function flashRed() {
-  const overlay = document.createElement('div');
-  overlay.className = 'flash-overlay';
-  document.body.appendChild(overlay);
-  setTimeout(() => overlay.remove(), 350);
-}
+// ============ 扫描阶段 ============
+async function runScan() {
+  scanAttempts++;
+  const scanLabel = document.querySelector('#progress-wrap .label');
+  const pbar = document.querySelector('#progress-bar');
 
-// ============ 阶段一：逃跑按钮 ============
-const btn = document.getElementById('run-btn');
-const counter = document.getElementById('counter');
-const phase1 = document.getElementById('phase1');
-const phase2 = document.getElementById('phase2');
-const phase3 = document.getElementById('phase3');
-const phase4 = document.getElementById('phase4');
-
-function runAway(clientX, clientY) {
-  if (revealed || currentPhase !== 1) return;
-  attempts++;
-  counter.textContent = '已尝试 ' + attempts + ' 次修复';
-  showTaunt(clientX, clientY);
-  flashRed();
-  vibrate([80, 30, 80]);
-
-  if (attempts >= MAX_ATTEMPTS) {
-    startPhase2();
+  if (scanAttempts >= MAX_SCANS) {
+    await printLines([
+      { text: '', cls: 'dim', delay: 200 },
+      { text: '╔══════════════════════════════════════╗', cls: 'cyan', delay: 150 },
+      { text: '║  SCAN COMPLETE - 扫描完成           ║', cls: 'cyan', delay: 150 },
+      { text: '╚══════════════════════════════════════╝', cls: 'cyan', delay: 150 },
+      { text: '', cls: 'dim', delay: 200 },
+      { text: '>>> 扫描结果:', cls: 'yellow', delay: 300 },
+      { text: '    威胁总数:  47', cls: 'red', delay: 200 },
+      { text: '    高危:      31 (系统级)', cls: 'red', delay: 200 },
+      { text: '    中危:      12', cls: 'yellow', delay: 200 },
+      { text: '    低危:      4', cls: 'dim', delay: 200 },
+      { text: '', cls: 'dim', delay: 150 },
+      { text: '    Trojan.Android.FakeApp     [HIGH]', cls: 'red', delay: 200 },
+      { text: '    Spyware.KeyLogger.v3       [HIGH]', cls: 'red', delay: 200 },
+      { text: '    Phishing.Payload.v7        [HIGH]', cls: 'red', delay: 200 },
+      { text: '    Adware.Popup.Bomb          [MEDIUM]', cls: 'yellow', delay: 200 },
+      { text: '    Exploit.WebView.Leak       [MEDIUM]', cls: 'yellow', delay: 200 },
+      { text: '    Ransomware.Locker.v2       [HIGH]', cls: 'red', delay: 200 },
+      { text: '', cls: 'dim', delay: 150 },
+      { text: '输入 clean 开始清理，或输入 exit 退出', cls: 'dim', delay: 300 },
+      { text: '', cls: 'dim', delay: 100 },
+    ]);
+    scanPhase = 2;
+    progressWrap.style.display = 'none';
+    vib([300, 100, 300, 100, 800]);
     return;
   }
 
-  const btnRect = btn.getBoundingClientRect();
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const bw = btnRect.width || 170;
-  const bh = btnRect.height || 54;
-  const pad = 10;
-  const cx = clientX || vw / 2;
-  const cy = clientY || vh / 2;
+  progressWrap.style.display = 'block';
+  scanLabel.textContent = '[SCANNING] Depth Level ' + scanAttempts;
 
-  let newX, newY;
-  for (let i = 0; i < 50; i++) {
-    newX = pad + Math.random() * (vw - bw - pad * 2);
-    newY = 60 + Math.random() * (vh - bh - 60 - pad * 2);
-    if (Math.hypot(newX - cx, newY - cy) > 120) break;
-  }
+  // 进度条动画
+  let p = 0;
+  const progressInterval = setInterval(() => {
+    p += Math.random() * 3;
+    if (p > 95) p = 95;
+    progressFill.style.width = Math.min(p, 95) + '%';
+  }, 200);
 
-  btn.style.left = newX + 'px';
-  btn.style.top = newY + 'px';
-  btn.style.transform = 'none';
-  btn.style.bottom = 'auto';
-}
-
-function showTaunt(x, y) {
-  const t = document.createElement('div');
-  t.className = 'taunt';
-  t.textContent = taunts[Math.min(attempts - 1, taunts.length - 1)];
-  t.style.left = Math.min(Math.max((x || 200) - 60, 10), window.innerWidth - 160) + 'px';
-  t.style.top = Math.max((y || 300) - 60, 40) + 'px';
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 1500);
-}
-
-btn.addEventListener('mouseenter', (e) => runAway(e.clientX, e.clientY));
-btn.addEventListener('touchstart', (e) => {
-  e.preventDefault();
-  runAway(e.touches[0].clientX, e.touches[0].clientY);
-}, { passive: false });
-btn.addEventListener('click', (e) => {
-  e.preventDefault();
-  runAway(e.clientX, e.clientY);
-});
-
-// 防止误触
-btn.addEventListener('touchend', (e) => e.preventDefault());
-
-// ============ 阶段二：扫描 ============
-function startPhase2() {
-  currentPhase = 2;
-  phase1.style.display = 'none';
-  phase2.style.display = 'flex';
-  vibrate([200, 100, 200, 100, 500]);
-
-  const scanBar = document.getElementById('scan-bar');
-  const scanOutput = document.getElementById('scan-output');
-
-  const lines = [
-    { text: '> 初始化安全引擎...', delay: 200 },
-    { text: '> 加载病毒特征库 v4.7.2', delay: 300 },
-    { text: '> 开始扫描系统分区...', delay: 400 },
-    { text: '> 检查 /system/app/ ...', delay: 500 },
-    { text: '> 检查 /data/data/ ...', delay: 600 },
-    { text: '⚠ 发现异常进程: com.android.fakeapp', cls: 'warn', delay: 800 },
-    { text: '⚠ 发现可疑权限: READ_CONTACTS', cls: 'warn', delay: 700 },
-    { text: '> 扫描已安装应用...', delay: 500 },
-    { text: '> 检查微信缓存...', delay: 400 },
-    { text: '> 检查相册文件...', delay: 500 },
-    { text: '⚠ 发现隐藏文件: .trojan.dat', cls: 'warn', delay: 800 },
-    { text: '🔴 检测到键盘记录器!', cls: 'danger', delay: 1000 },
-    { text: '🔴 检测到屏幕截图窃取!', cls: 'danger', delay: 900 },
-    { text: '> 扫描网络连接...', delay: 500 },
-    { text: '⚠ 可疑IP: 185.xxx.xxx.23', cls: 'warn', delay: 700 },
-    { text: '⚠ 数据泄露: 2.3MB', cls: 'warn', delay: 800 },
-    { text: '> 扫描完成.', delay: 1000 },
-    { text: '', delay: 300 },
-    { text: '================================', delay: 200 },
-    { text: '  发现 47 个安全风险', delay: 500 },
-    { text: '  高危: 31 | 中危: 12 | 低危: 4', delay: 400 },
-    { text: '================================', delay: 300 },
+  const scanLines = [
+    { text: '>>> 开始扫描... (Level ' + scanAttempts + ')', cls: 'cyan', delay: 300 },
+    { text: '[OK] 检查 /system', cls: 'green', delay: 400 },
+    { text: '[OK] 检查 /data', cls: 'green', delay: 350 },
+    { text: '[OK] 检查 /sdcard', cls: 'green', delay: 300 },
+    { text: '[*] 扫描用户应用...', cls: 'dim', delay: 500 },
+    { text: '[WARN] 可疑进程: com.android.fakeapp (PID: 12847)', cls: 'yellow', delay: 600 },
+    { text: '[WARN] 异常权限: android.permission.READ_CONTACTS', cls: 'yellow', delay: 500 },
+    { text: '[WARN] 异常权限: android.permission.RECORD_AUDIO', cls: 'yellow', delay: 400 },
+    { text: '[*] 扫描网络连接...', cls: 'dim', delay: 500 },
+    { text: '[WARN] 可疑出站连接: 185.244.xxx.xxx:443', cls: 'yellow', delay: 500 },
+    { text: '[WARN] 数据外传: ' + (Math.random() * 5 + 1).toFixed(1) + 'MB', cls: 'yellow', delay: 400 },
+    { text: '[*] 扫描存储...', cls: 'dim', delay: 400 },
+    { text: '[WARN] 隐藏文件: /sdcard/.cache/.trojan.dat', cls: 'yellow', delay: 500 },
+    { text: '[ALERT] 检测到键盘记录器!', cls: 'red', delay: 700 },
+    { text: '[ALERT] 检测到屏幕截图窃取!', cls: 'red', delay: 600 },
+    { text: '', cls: 'dim', delay: 200 },
+    { text: '>>> 第 ' + scanAttempts + ' 次扫描完成，发现新威胁', cls: 'yellow', delay: 400 },
+    { text: '输入 scan 继续深度扫描，或输入 exit 退出', cls: 'dim', delay: 300 },
+    { text: '', cls: 'dim', delay: 100 },
   ];
 
-  let totalDelay = 0;
-  let progress = 0;
-  lines.forEach((line) => {
-    totalDelay += line.delay;
-    setTimeout(() => {
-      const el = document.createElement('div');
-      el.className = 'scan-line' + (line.cls ? ' ' + line.cls : '');
-      el.textContent = line.text;
-      scanOutput.appendChild(el);
-      scanOutput.scrollTop = scanOutput.scrollHeight;
-    }, totalDelay);
-  });
+  await printLines(scanLines);
 
-  const totalTime = totalDelay;
-  const startTime = Date.now();
-  (function updateProgress() {
-    const p = Math.min(((Date.now() - startTime) / totalTime) * 100, 100);
-    scanBar.style.width = p + '%';
-    if (p < 100) requestAnimationFrame(updateProgress);
-  })();
-
-  setTimeout(() => startPhase3(), totalDelay + 1500);
+  clearInterval(progressInterval);
+  progressFill.style.width = '100%';
+  setTimeout(() => { progressFill.style.width = '0%'; progressWrap.style.display = 'none'; }, 500);
+  vib([150, 50, 150]);
 }
 
-// ============ 阶段三：病毒结果 ============
-function startPhase3() {
-  currentPhase = 3;
-  phase2.style.display = 'none';
-  phase3.style.display = 'flex';
-  vibrate([300, 100, 300, 100, 800]);
-  requestFullscreen();
+// ============ 清理阶段 ============
+async function runClean() {
+  await printLines([
+    { text: '>>> 启动清理程序...', cls: 'cyan', delay: 300 },
+    { text: '', cls: 'dim', delay: 200 },
+    { text: '[..] 清除 Trojan.Android.FakeApp...', cls: 'dim', delay: 500 },
+    { text: '[FAIL] 清理失败 - 病毒已变异', cls: 'red', delay: 400 },
+    { text: '[..] 清除 Spyware.KeyLogger.v3...', cls: 'dim', delay: 500 },
+    { text: '[FAIL] 清理失败 - 权限不足', cls: 'red', delay: 400 },
+    { text: '[..] 清除 Phishing.Payload.v7...', cls: 'dim', delay: 500 },
+    { text: '[FAIL] 清理失败 - 进程保护', cls: 'red', delay: 400 },
+    { text: '', cls: 'dim', delay: 200 },
+    { text: '╔══════════════════════════════════════╗', cls: 'red', delay: 150 },
+    { text: '║  !! 清理失败 - 需要管理员权限 !!   ║', cls: 'red', delay: 150 },
+    { text: '╚══════════════════════════════════════╝', cls: 'red', delay: 150 },
+    { text: '', cls: 'dim', delay: 200 },
+    { text: '输入 sudo clean 获取管理员权限清理', cls: 'dim', delay: 300 },
+    { text: '', cls: 'dim', delay: 100 },
+  ]);
+  vib([200, 100, 200, 100, 300]);
 }
 
-let phase3Attempts = 0;
-document.getElementById('deep-fix-btn').addEventListener('click', function() {
-  if (currentPhase !== 3) return;
-  phase3Attempts++;
-  vibrate([100, 50, 100]);
-  flashRed();
-
-  if (phase3Attempts >= MAX_PHASE3_ATTEMPTS) {
-    startPhase4();
-    return;
-  }
-
-  const fixBtn = document.getElementById('deep-fix-btn');
-  fixBtn.textContent = '⏳ 正在清理... 请勿离开';
-  fixBtn.style.background = '#ff9500';
-  fixBtn.disabled = true;
-
-  setTimeout(() => {
-    fixBtn.textContent = '⚠️ 清理失败！病毒已变异';
-    fixBtn.style.background = '#ff3b30';
-    fixBtn.disabled = false;
-  }, 2000);
-});
-
-// ============ 阶段四：揭晓 ============
-function startPhase4() {
-  currentPhase = 4;
+// ============ 揭晓 ============
+async function revealTruth() {
   revealed = true;
-  phase3.style.display = 'none';
-  phase4.style.display = 'flex';
-  document.getElementById('final-count').textContent = attempts + phase3Attempts;
+  progressWrap.style.display = 'none';
+  input.disabled = true;
+
+  await printLines([
+    { text: '', cls: 'dim', delay: 300 },
+    { text: '>>> 正在获取管理员权限...', cls: 'cyan', delay: 300 },
+    { text: '[OK] 权限提升成功 (root)', cls: 'green', delay: 300 },
+    { text: '', cls: 'dim', delay: 500 },
+    { text: '╔══════════════════════════════════════╗', cls: 'green', delay: 150 },
+    { text: '║                                    ║', cls: 'green', delay: 100 },
+    { text: '║     🤡  你 被 骗 了 ！  🤡        ║', cls: 'green', delay: 100 },
+    { text: '║                                    ║', cls: 'green', delay: 100 },
+    { text: '╚══════════════════════════════════════╝', cls: 'green', delay: 150 },
+    { text: '', cls: 'dim', delay: 200 },
+    { text: '你的手机根本没有病毒。', cls: 'green', delay: 400 },
+    { text: '这一切都是假的。', cls: 'green', delay: 300 },
+    { text: '', cls: 'dim', delay: 200 },
+    { text: '你被恶搞了 ' + (scanAttempts) + ' 次，', cls: 'yellow', delay: 300 },
+    { text: '但你的手机很安全 :)', cls: 'green', delay: 300 },
+    { text: '', cls: 'dim', delay: 200 },
+    { text: '—— 来自你最好的朋友的恶作剧 😈', cls: 'dim', delay: 500 },
+    { text: '', cls: 'dim', delay: 200 },
+    { text: '现在可以安全关闭了。', cls: 'gray', delay: 300 },
+    { text: '', cls: 'dim', delay: 100 },
+  ]);
+
+  // 彩纸
   launchConfetti();
-  for (let i = 0; i < 35; i++) history.back();
 }
 
 function launchConfetti() {
-  const colors = ['#ff3b30','#ffd60a','#30d158','#0a84ff','#bf5af2','#ff9f0a','#ff375f'];
-  for (let i = 0; i < 80; i++) {
+  const colors = ['#0f0','#ff0','#0ff','#f0f','#f33','#0a0','#fff'];
+  for (let i = 0; i < 60; i++) {
     setTimeout(() => {
       const c = document.createElement('div');
       c.className = 'confetti';
       c.style.background = colors[Math.floor(Math.random() * colors.length)];
       c.style.left = Math.random() * 100 + 'vw';
       c.style.top = '-10px';
-      c.style.width = (6 + Math.random() * 10) + 'px';
-      c.style.height = (6 + Math.random() * 10) + 'px';
-      c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      c.style.width = (4 + Math.random() * 10) + 'px';
+      c.style.height = (4 + Math.random() * 10) + 'px';
+      c.style.borderRadius = Math.random() > 0.5 ? '50%' : '1px';
       document.body.appendChild(c);
-      const duration = 1500 + Math.random() * 2500;
-      const xDrift = (Math.random() - 0.5) * 250;
+      const dur = 1500 + Math.random() * 2500;
+      const dx = (Math.random() - 0.5) * 250;
       c.animate([
         { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
-        { transform: `translate(${xDrift}px,${window.innerHeight + 20}px) rotate(${Math.random()*720}deg)`, opacity: 0.2 }
-      ], { duration, easing: 'cubic-bezier(.25,.46,.45,.94)' });
-      setTimeout(() => c.remove(), duration);
+        { transform: `translate(${dx}px,${window.innerHeight+20}px) rotate(${Math.random()*720}deg)`, opacity: 0.2 }
+      ], { duration: dur, easing: 'cubic-bezier(.25,.46,.45,.94)' });
+      setTimeout(() => c.remove(), dur);
     }, i * 30);
   }
 }
 
-// ============ 初始化 ============
-history.pushState({ step: 'locked' }, '', window.location.href);
-requestFullscreen();
+// ============ 命令处理 ============
+input.addEventListener('keydown', async function(e) {
+  if (e.key !== 'Enter' || revealed) return;
+  const cmd = input.value.trim().toLowerCase();
+  input.value = '';
+
+  if (!cmd) return;
+
+  // 回显命令
+  await print('$ ' + cmd, 'green', 50);
+
+  if (locked) {
+    // 正式流程
+    switch (cmd) {
+      case 'scan':
+        if (scanPhase === 0 || scanPhase === 1) {
+          await runScan();
+          if (scanPhase === 0) scanPhase = 1;
+        } else if (scanPhase === 2) {
+          await print('>>> 扫描已完成。输入 clean 清理病毒。', 'dim', 200);
+        }
+        break;
+      case 'clean':
+        if (scanPhase === 2) {
+          await runClean();
+          scanPhase = 3;
+        } else if (scanPhase < 2) {
+          await print('>>> 请先完成扫描。输入 scan', 'dim', 200);
+        } else {
+          await print('>>> 输入 sudo clean 获取管理员权限', 'dim', 200);
+        }
+        break;
+      case 'sudo clean':
+        await revealTruth();
+        break;
+      case 'exit':
+        showExitDialog();
+        break;
+      case 'help':
+        await printLines([
+          { text: '可用命令:', cls: 'cyan', delay: 100 },
+          { text: '  scan      - 深度安全扫描', cls: 'dim', delay: 100 },
+          { text: '  clean     - 清理病毒', cls: 'dim', delay: 100 },
+          { text: '  sudo clean - 管理员权限清理', cls: 'dim', delay: 100 },
+          { text: '  exit      - 退出', cls: 'dim', delay: 100 },
+          { text: '  help      - 显示帮助', cls: 'dim', delay: 100 },
+        ]);
+        break;
+      default:
+        await print('bash: ' + cmd.split(' ')[0] + ': command not found', 'red', 100);
+        await print('输入 help 查看可用命令', 'dim', 200);
+    }
+  }
+});
+
+// ============ 启动 ============
+goFullscreen();
+setTimeout(() => {
+  initTerminal();
+  input.focus();
+}, 500);
+
+// 点击终端聚焦输入框
+term.addEventListener('click', () => input.focus());
 </script>
 </body>
 </html>
