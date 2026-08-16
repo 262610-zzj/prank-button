@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>重要通知</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #000;
+    color: #fff;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #notice-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 24px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    position: relative;
+  }
+
+  .warning-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+
+  .notice-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    text-align: center;
+    color: #e94560;
+  }
+
+  .notice-body {
+    font-size: 15px;
+    line-height: 1.7;
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 40px;
+    max-width: 320px;
+  }
+
+  .notice-body span {
+    color: #e94560;
+    font-weight: 600;
+  }
+
+  #run-btn {
+    position: fixed;
+    padding: 14px 40px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #e94560, #c23152);
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(233, 69, 96, 0.5);
+    transition: transform 0.08s ease;
+    left: 50%;
+    top: 75%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+  }
+
+  #run-btn:active {
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+
+  .counter {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 13px;
+    color: #555;
+    z-index: 50;
+  }
+
+  #reveal-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 24px;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    text-align: center;
+  }
+
+  #reveal-screen .big-emoji {
+    font-size: 80px;
+    margin-bottom: 24px;
+    animation: bounce 0.6s ease infinite alternate;
+  }
+
+  @keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-15px); }
+  }
+
+  #reveal-screen .reveal-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    background: linear-gradient(90deg, #f7971e, #ffd200);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  #reveal-screen .reveal-sub {
+    font-size: 16px;
+    color: #bbb;
+    margin-bottom: 30px;
+    line-height: 1.6;
+  }
+
+  #reveal-screen .reveal-sub strong {
+    color: #ffd200;
+  }
+
+  .confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    z-index: 200;
+    pointer-events: none;
+  }
+
+  .taunt {
+    position: fixed;
+    font-size: 14px;
+    color: #e94560;
+    z-index: 150;
+    pointer-events: none;
+    animation: floatUp 1.2s ease-out forwards;
+    font-weight: 600;
+  }
+
+  @keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-60px) scale(1.3); }
+  }
+</style>
+</head>
+<body>
+
+<div id="notice-screen">
+  <div class="warning-icon">⚠️</div>
+  <div class="notice-title">系统安全警告</div>
+  <div class="notice-body">
+    检测到您的设备存在 <span>3 项高危风险</span>，可能导致数据泄露。请立即点击下方按钮完成安全验证。
+  </div>
+  <button id="run-btn">立即修复</button>
+  <div class="counter" id="counter"></div>
+</div>
+
+<div id="reveal-screen">
+  <div class="big-emoji">🤡</div>
+  <div class="reveal-title">你被骗了！</div>
+  <div class="reveal-sub">
+    点了 <strong id="final-count">0</strong> 次都没点到吧？<br>
+    下次别随便点陌生链接啦～<br><br>
+    <span style="font-size:13px;color:#666">—— 来自你朋友的善意恶搞 😜</span>
+  </div>
+</div>
+
+<script>
+const btn = document.getElementById('run-btn');
+const counter = document.getElementById('counter');
+const noticeScreen = document.getElementById('notice-screen');
+const revealScreen = document.getElementById('reveal-screen');
+const finalCount = document.getElementById('final-count');
+
+let attempts = 0;
+let revealed = false;
+const MAX_ATTEMPTS = 8;
+
+const taunts = [
+  '哈哈，没点到吧～',
+  '太慢了！🏃',
+  '再试试？才怪😏',
+  '你认真的吗？',
+  '手指不够快哦～',
+  '别放弃嘛（反正也点不到）',
+  '我都替你累了...',
+  '最后一次机会哦～',
+];
+
+function runAway(clientX, clientY) {
+  if (revealed) return;
+  attempts++;
+  counter.textContent = `已尝试 ${attempts} 次`;
+  showTaunt(clientX, clientY);
+
+  if (attempts >= MAX_ATTEMPTS) {
+    reveal();
+    return;
+  }
+
+  const btnRect = btn.getBoundingClientRect();
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const bw = btnRect.width || 140;
+  const bh = btnRect.height || 48;
+  const pad = 20;
+
+  let newX, newY;
+  do {
+    newX = pad + Math.random() * (vw - bw - pad * 2);
+    newY = pad + Math.random() * (vh - bh - pad * 2);
+  } while (
+    Math.abs(newX - btnRect.left) < bw &&
+    Math.abs(newY - btnRect.top) < bh
+  );
+
+  btn.style.left = newX + 'px';
+  btn.style.top = newY + 'px';
+  btn.style.transform = 'none';
+}
+
+function showTaunt(x, y) {
+  const t = document.createElement('div');
+  t.className = 'taunt';
+  t.textContent = taunts[Math.min(attempts - 1, taunts.length - 1)];
+  t.style.left = (x || window.innerWidth / 2) + 'px';
+  t.style.top = (y || window.innerHeight / 2 - 40) + 'px';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1200);
+}
+
+btn.addEventListener('mouseenter', (e) => {
+  runAway(e.clientX, e.clientY);
+});
+
+btn.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  runAway(touch.clientX, touch.clientY);
+}, { passive: false });
+
+btn.addEventListener('click', (e) => {
+  e.preventDefault();
+  runAway(e.clientX, e.clientY);
+});
+
+function reveal() {
+  revealed = true;
+  finalCount.textContent = attempts;
+  noticeScreen.style.display = 'none';
+  btn.style.display = 'none';
+  counter.style.display = 'none';
+  revealScreen.style.display = 'flex';
+  launchConfetti();
+}
+
+function launchConfetti() {
+  const colors = ['#e94560', '#ffd200', '#00d2ff', '#7b2ff7', '#ff6b6b', '#51cf66'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.top = '-10px';
+      c.style.width = (6 + Math.random() * 8) + 'px';
+      c.style.height = (6 + Math.random() * 8) + 'px';
+      c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      document.body.appendChild(c);
+
+      const duration = 1500 + Math.random() * 2000;
+      const xDrift = (Math.random() - 0.5) * 200;
+      c.animate([
+        { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
+        { transform: `translate(${xDrift}px, ${window.innerHeight + 20}px) rotate(${Math.random() * 720}deg)`, opacity: 0.3 }
+      ], { duration, easing: 'cubic-bezier(.25,.46,.45,.94)' });
+
+      setTimeout(() => c.remove(), duration);
+    }, i * 40);
+  }
+}
+</script>
+</body>
+</html>
