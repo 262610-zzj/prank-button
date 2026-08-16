@@ -301,7 +301,7 @@ inp.addEventListener('keydown',async function(e){
   if(!cmd)return;
   await p('$ '+cmd,'g',50);
   switch(cmd){
-    case'scan':if(phase===0){await runScan();phase=1;}else if(phase>=2){await p('>>> 扫描已完成。输入 clean 清理病毒。','d',100);}else{await p('>>> 扫描正在进行中...','d',100);}break;
+    case'scan':if(phase===0){await runScan();}else if(phase>=2){await p('>>> 扫描已完成。输入 clean 清理病毒。','d',100);}else{await p('>>> 扫描正在进行中...','d',100);}break;
     case'clean':if(phase===2){await runClean();}else if(phase<2){await p('>>> 请先完成扫描。输入 scan','d',100);}else{await p('>>> 输入 sudo clean 获取管理员权限','d',100);}break;
     case'sudo clean':await reveal();break;
     case'exit':showExit();break;
