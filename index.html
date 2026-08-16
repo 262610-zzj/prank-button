@@ -19,12 +19,8 @@
     user-select: none; -webkit-user-select: none;
     -webkit-touch-callout: none;
     -webkit-tap-highlight-color: transparent;
-    /* 禁止所有浏览器手势 */
-    touch-action: none;
-    -webkit-touch-action: none;
     overscroll-behavior: none;
     -webkit-overscroll-behavior: none;
-    /* 禁止文本选择 */
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -56,6 +52,8 @@
     height: calc(100% - 48px); overflow-y: auto; padding: 12px;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: none;
+    touch-action: pan-y;
+    -webkit-touch-action: pan-y;
   }
 
   .line {
@@ -182,36 +180,45 @@ screen.orientation && screen.orientation.addEventListener('change', () => {
   lockPortrait();
 });
 
-// ============ 触摸事件拦截（阻止侧边返回手势） ============
-// 在 body 层面拦截所有触摸，阻止系统手势
+// ============ 触摸事件拦截（只拦边缘，不拦滚动） ============
+const EDGE_WIDTH = 44; // 边缘检测宽度(px)
+let edgeTouchActive = false;
+
 document.addEventListener('touchstart', function(e) {
-  e.preventDefault();
+  // 检查是否有触摸点靠近屏幕边缘
+  for (let i = 0; i < e.touches.length; i++) {
+    const x = e.touches[i].clientX;
+    if (x < EDGE_WIDTH || x > window.innerWidth - EDGE_WIDTH) {
+      edgeTouchActive = true;
+      e.preventDefault();
+      return;
+    }
+  }
+  edgeTouchActive = false;
 }, { passive: false, capture: true });
 
 document.addEventListener('touchmove', function(e) {
-  e.preventDefault();
+  if (edgeTouchActive) {
+    e.preventDefault();
+    vib([20]);
+  }
 }, { passive: false, capture: true });
 
 document.addEventListener('touchend', function(e) {
-  e.preventDefault();
+  if (edgeTouchActive) {
+    e.preventDefault();
+    edgeTouchActive = false;
+  }
 }, { passive: false, capture: true });
 
 document.addEventListener('touchcancel', function(e) {
-  e.preventDefault();
+  edgeTouchActive = false;
 }, { passive: false, capture: true });
 
-// 特别针对边缘区域加强拦截
-document.addEventListener('gesturestart', function(e) {
-  e.preventDefault();
-}, { passive: false, capture: true });
-
-document.addEventListener('gesturechange', function(e) {
-  e.preventDefault();
-}, { passive: false, capture: true });
-
-document.addEventListener('gestureend', function(e) {
-  e.preventDefault();
-}, { passive: false, capture: true });
+// 手势拦截
+document.addEventListener('gesturestart', function(e) { e.preventDefault(); }, { passive: false, capture: true });
+document.addEventListener('gesturechange', function(e) { e.preventDefault(); }, { passive: false, capture: true });
+document.addEventListener('gestureend', function(e) { e.preventDefault(); }, { passive: false, capture: true });
 
 // ============ 终端引擎 ============
 const term = document.getElementById('terminal');
@@ -231,14 +238,14 @@ let revealed = false;
 let locked = false;
 const MAX_SCANS = 4;
 
-// 允许输入框的触摸事件正常响应
-input.addEventListener('touchstart', function(e) {
-  e.stopPropagation();
-}, { passive: false });
+// 输入框和终端区域允许滚动
+term.addEventListener('touchstart', function(e) {
+  edgeTouchActive = false;
+}, { passive: true });
 
-input.addEventListener('touchmove', function(e) {
-  e.stopPropagation();
-}, { passive: false });
+input.addEventListener('touchstart', function(e) {
+  edgeTouchActive = false;
+}, { passive: true });
 
 // ============ 输出到终端 ============
 function print(text, cls, delay) {
