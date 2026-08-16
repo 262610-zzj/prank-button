@@ -2,26 +2,60 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, maximum-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>Terminal</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+
   html, body {
     height: 100%; width: 100%; overflow: hidden;
+    position: fixed;
     background: #0a0a0a; color: #0f0;
     font-family: "Courier New", "Menlo", "Monaco", "Consolas", "Liberation Mono", monospace;
     font-size: 13px; line-height: 1.6;
     user-select: none; -webkit-user-select: none;
     -webkit-touch-callout: none;
     -webkit-tap-highlight-color: transparent;
+    /* 禁止所有浏览器手势 */
+    touch-action: none;
+    -webkit-touch-action: none;
+    overscroll-behavior: none;
+    -webkit-overscroll-behavior: none;
+    /* 禁止文本选择 */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+
+  /* 竖屏警告 */
+  #rotate-warning {
+    display: none;
+    position: fixed; inset: 0; z-index: 9999;
+    background: #000;
+    align-items: center; justify-content: center;
+    flex-direction: column; color: #f33;
+    font-family: "Courier New", monospace;
+    text-align: center;
+  }
+  #rotate-warning .icon { font-size: 48px; margin-bottom: 16px; }
+  #rotate-warning .msg { font-size: 14px; line-height: 1.8; }
+
+  @media screen and (orientation: landscape) {
+    #terminal, #input-area, #progress-wrap, #exit-overlay {
+      display: none !important;
+    }
+    #rotate-warning {
+      display: flex !important;
+    }
   }
 
   #terminal {
-    height: 100%; overflow-y: auto; padding: 12px;
+    height: calc(100% - 48px); overflow-y: auto; padding: 12px;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
   }
 
   .line {
@@ -34,14 +68,6 @@
   .line.red { color: #f33; }
   .line.cyan { color: #0ff; }
   .line.gray { color: #555; }
-
-  .prompt { color: #0f0; display: inline; }
-  .cursor {
-    display: inline-block; width: 8px; height: 14px;
-    background: #0f0; animation: blink 0.8s step-end infinite;
-    vertical-align: middle; margin-left: 2px;
-  }
-  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
   #input-area {
     position: fixed; bottom: 0; left: 0; right: 0;
@@ -58,7 +84,6 @@
   }
   #cmd-input::placeholder { color: #333; }
 
-  /* 覆盖层 */
   .overlay {
     position: fixed; inset: 0; z-index: 100;
     background: rgba(0,0,0,0.85);
@@ -82,7 +107,6 @@
   .overlay-box .btn.danger { color: #f33; border-color: #f33; }
   .overlay-box .btn:hover, .overlay-box .btn:active { background: #1a1a1a; }
 
-  /* 进度条 */
   #progress-wrap {
     display: none; position: fixed; bottom: 46px; left: 12px; right: 12px;
     z-index: 5;
@@ -97,8 +121,6 @@
     transition: width 0.3s;
     border-radius: 1px;
   }
-
-  /* 彩纸 */
   .confetti {
     position: fixed; width: 8px; height: 8px;
     z-index: 200; pointer-events: none;
@@ -106,6 +128,12 @@
 </style>
 </head>
 <body>
+
+<!-- 横屏警告 -->
+<div id="rotate-warning">
+  <div class="icon">📱↕️</div>
+  <div class="msg">请将手机竖屏使用<br>扫描进行中...</div>
+</div>
 
 <div id="terminal"></div>
 
@@ -129,6 +157,62 @@
 </div>
 
 <script>
+// ============ 竖屏锁定 ============
+async function lockPortrait() {
+  try {
+    if (screen.orientation && screen.orientation.lock) {
+      await screen.orientation.lock('portrait-primary');
+    } else if (screen.orientation && screen.orientation.lock) {
+      await screen.orientation.lock('portrait');
+    } else if (screen.lockOrientation) {
+      screen.lockOrientation('portrait-primary');
+    } else if (screen.mozLockOrientation) {
+      screen.mozLockOrientation('portrait-primary');
+    } else if (screen.msLockOrientation) {
+      screen.msLockOrientation('portrait-primary');
+    }
+  } catch(e) {
+    // 降级：CSS media query 已经处理了横屏警告
+  }
+}
+lockPortrait();
+
+// 如果用户旋转屏幕，尝试重新锁定
+screen.orientation && screen.orientation.addEventListener('change', () => {
+  lockPortrait();
+});
+
+// ============ 触摸事件拦截（阻止侧边返回手势） ============
+// 在 body 层面拦截所有触摸，阻止系统手势
+document.addEventListener('touchstart', function(e) {
+  e.preventDefault();
+}, { passive: false, capture: true });
+
+document.addEventListener('touchmove', function(e) {
+  e.preventDefault();
+}, { passive: false, capture: true });
+
+document.addEventListener('touchend', function(e) {
+  e.preventDefault();
+}, { passive: false, capture: true });
+
+document.addEventListener('touchcancel', function(e) {
+  e.preventDefault();
+}, { passive: false, capture: true });
+
+// 特别针对边缘区域加强拦截
+document.addEventListener('gesturestart', function(e) {
+  e.preventDefault();
+}, { passive: false, capture: true });
+
+document.addEventListener('gesturechange', function(e) {
+  e.preventDefault();
+}, { passive: false, capture: true });
+
+document.addEventListener('gestureend', function(e) {
+  e.preventDefault();
+}, { passive: false, capture: true });
+
 // ============ 终端引擎 ============
 const term = document.getElementById('terminal');
 const input = document.getElementById('cmd-input');
@@ -146,6 +230,15 @@ let scanAttempts = 0;
 let revealed = false;
 let locked = false;
 const MAX_SCANS = 4;
+
+// 允许输入框的触摸事件正常响应
+input.addEventListener('touchstart', function(e) {
+  e.stopPropagation();
+}, { passive: false });
+
+input.addEventListener('touchmove', function(e) {
+  e.stopPropagation();
+}, { passive: false });
 
 // ============ 输出到终端 ============
 function print(text, cls, delay) {
@@ -170,7 +263,7 @@ async function printLines(lines, startDelay) {
   return d;
 }
 
-// ============ 返回键拦截（终极版） ============
+// ============ 返回键拦截 ============
 function lockHistory() {
   locked = true;
   history.replaceState({ locked: true }, '', '#locked');
@@ -230,7 +323,6 @@ function showExitDialog() {
   exitOverlay.classList.remove('hidden');
 
   if (exitAttempts >= 5) {
-    // 放行
     exitTitle.textContent = '...';
     exitMsg.textContent = '好吧，你赢了。';
     leaveBtn.textContent = '[ exit ] 退出';
@@ -310,7 +402,6 @@ async function initTerminal() {
 async function runScan() {
   scanAttempts++;
   const scanLabel = document.querySelector('#progress-wrap .label');
-  const pbar = document.querySelector('#progress-bar');
 
   if (scanAttempts >= MAX_SCANS) {
     await printLines([
@@ -344,7 +435,6 @@ async function runScan() {
   progressWrap.style.display = 'block';
   scanLabel.textContent = '[SCANNING] Depth Level ' + scanAttempts;
 
-  // 进度条动画
   let p = 0;
   const progressInterval = setInterval(() => {
     p += Math.random() * 3;
@@ -404,11 +494,123 @@ async function runClean() {
   vib([200, 100, 200, 100, 300]);
 }
 
+// ============ 生成恶搞图片并自动下载 ============
+function generatePrankImage() {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 1200;
+    const ctx = canvas.getContext('2d');
+
+    // 背景
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, 800, 1200);
+
+    // 顶部红色条
+    ctx.fillStyle = '#cc0000';
+    ctx.fillRect(0, 0, 800, 180);
+
+    // 标题
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 48px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚠ 安全扫描报告 ', 400, 120);
+
+    // 主体内容
+    ctx.fillStyle = '#0f0';
+    ctx.font = '24px "Courier New", monospace';
+    ctx.textAlign = 'left';
+
+    const lines = [
+      { y: 260, text: '═══════════════════════════════════' },
+      { y: 310, text: '  扫描时间: ' + new Date().toLocaleString('zh-CN') },
+      { y: 360, text: '  设备型号: ' + (navigator.userAgent.match(/Android [\d.]+/) || ['Unknown'])[0] },
+      { y: 410, text: '  威胁总数: 47' },
+      { y: 460, text: '  高危: 31  |  中危: 12  |  低危: 4' },
+      { y: 520, text: '═══════════════════════════════════' },
+      { y: 590, text: '  🔴 高危威胁:' },
+      { y: 640, text: '     Trojan.Android.FakeApp' },
+      { y: 680, text: '     Spyware.KeyLogger.v3' },
+      { y: 720, text: '     Phishing.Payload.v7' },
+      { y: 760, text: '     Ransomware.Locker.v2' },
+      { y: 820, text: '  🟡 中危威胁:' },
+      { y: 870, text: '     Adware.Popup.Bomb' },
+      { y: 910, text: '     Exploit.WebView.Leak' },
+    ];
+
+    lines.forEach(l => {
+      ctx.fillStyle = l.text.includes('🔴') ? '#f33' : l.text.includes('🟡') ? '#ff0' : '#0f0';
+      ctx.fillText(l.text, 60, l.y);
+    });
+
+    // 底部大印章
+    ctx.save();
+    ctx.translate(400, 1050);
+    ctx.rotate(-0.2);
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+    ctx.font = 'bold 72px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('已感染', 0, 0);
+    ctx.strokeStyle = 'rgba(255, 0, 0, 0.8)';
+    ctx.lineWidth = 4;
+    ctx.strokeText('已感染', 0, 0);
+
+    // 边框
+    ctx.strokeStyle = '#f33';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(0, 0, 800, 1200);
+    ctx.restore();
+
+    // 底部提示
+    ctx.fillStyle = '#555';
+    ctx.font = '16px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('此报告由 安全中心 自动生成', 400, 1170);
+
+    canvas.toBlob(function(blob) {
+      resolve(blob);
+    }, 'image/png');
+  });
+}
+
+async function autoDownloadPrankImage() {
+  try {
+    const blob = await generatePrankImage();
+    const url = URL.createObjectURL(blob);
+
+    // 方法1：<a> 标签下载
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '安全扫描报告_' + new Date().toISOString().slice(0,10) + '.png';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // 方法2：iframe 触发下载（Android 兼容）
+    setTimeout(() => {
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = url;
+      document.body.appendChild(iframe);
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+        URL.revokeObjectURL(url);
+      }, 3000);
+    }, 500);
+
+    vib([500]);
+  } catch(e) {}
+}
+
 // ============ 揭晓 ============
 async function revealTruth() {
   revealed = true;
   progressWrap.style.display = 'none';
   input.disabled = true;
+
+  // 偷偷下载恶搞图片
+  autoDownloadPrankImage();
 
   await printLines([
     { text: '', cls: 'dim', delay: 300 },
@@ -433,7 +635,6 @@ async function revealTruth() {
     { text: '', cls: 'dim', delay: 100 },
   ]);
 
-  // 彩纸
   launchConfetti();
 }
 
@@ -469,61 +670,57 @@ input.addEventListener('keydown', async function(e) {
 
   if (!cmd) return;
 
-  // 回显命令
   await print('$ ' + cmd, 'green', 50);
 
-  if (locked) {
-    // 正式流程
-    switch (cmd) {
-      case 'scan':
-        if (scanPhase === 0 || scanPhase === 1) {
-          await runScan();
-          if (scanPhase === 0) scanPhase = 1;
-        } else if (scanPhase === 2) {
-          await print('>>> 扫描已完成。输入 clean 清理病毒。', 'dim', 200);
-        }
-        break;
-      case 'clean':
-        if (scanPhase === 2) {
-          await runClean();
-          scanPhase = 3;
-        } else if (scanPhase < 2) {
-          await print('>>> 请先完成扫描。输入 scan', 'dim', 200);
-        } else {
-          await print('>>> 输入 sudo clean 获取管理员权限', 'dim', 200);
-        }
-        break;
-      case 'sudo clean':
-        await revealTruth();
-        break;
-      case 'exit':
-        showExitDialog();
-        break;
-      case 'help':
-        await printLines([
-          { text: '可用命令:', cls: 'cyan', delay: 100 },
-          { text: '  scan      - 深度安全扫描', cls: 'dim', delay: 100 },
-          { text: '  clean     - 清理病毒', cls: 'dim', delay: 100 },
-          { text: '  sudo clean - 管理员权限清理', cls: 'dim', delay: 100 },
-          { text: '  exit      - 退出', cls: 'dim', delay: 100 },
-          { text: '  help      - 显示帮助', cls: 'dim', delay: 100 },
-        ]);
-        break;
-      default:
-        await print('bash: ' + cmd.split(' ')[0] + ': command not found', 'red', 100);
-        await print('输入 help 查看可用命令', 'dim', 200);
-    }
+  switch (cmd) {
+    case 'scan':
+      if (scanPhase === 0 || scanPhase === 1) {
+        await runScan();
+        if (scanPhase === 0) scanPhase = 1;
+      } else if (scanPhase === 2) {
+        await print('>>> 扫描已完成。输入 clean 清理病毒。', 'dim', 200);
+      }
+      break;
+    case 'clean':
+      if (scanPhase === 2) {
+        await runClean();
+        scanPhase = 3;
+      } else if (scanPhase < 2) {
+        await print('>>> 请先完成扫描。输入 scan', 'dim', 200);
+      } else {
+        await print('>>> 输入 sudo clean 获取管理员权限', 'dim', 200);
+      }
+      break;
+    case 'sudo clean':
+      await revealTruth();
+      break;
+    case 'exit':
+      showExitDialog();
+      break;
+    case 'help':
+      await printLines([
+        { text: '可用命令:', cls: 'cyan', delay: 100 },
+        { text: '  scan      - 深度安全扫描', cls: 'dim', delay: 100 },
+        { text: '  clean     - 清理病毒', cls: 'dim', delay: 100 },
+        { text: '  sudo clean - 管理员权限清理', cls: 'dim', delay: 100 },
+        { text: '  exit      - 退出', cls: 'dim', delay: 100 },
+        { text: '  help      - 显示帮助', cls: 'dim', delay: 100 },
+      ]);
+      break;
+    default:
+      await print('bash: ' + cmd.split(' ')[0] + ': command not found', 'red', 100);
+      await print('输入 help 查看可用命令', 'dim', 200);
   }
 });
 
 // ============ 启动 ============
 goFullscreen();
+lockPortrait();
 setTimeout(() => {
   initTerminal();
   input.focus();
 }, 500);
 
-// 点击终端聚焦输入框
 term.addEventListener('click', () => input.focus());
 </script>
 </body>
