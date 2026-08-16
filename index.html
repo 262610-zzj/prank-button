@@ -2,560 +2,322 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, maximum-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,viewport-fit=cover,maximum-scale=1.0">
 <title>Terminal</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body {
-    height: 100%; width: 100%; overflow: hidden; position: fixed;
-    background: #0a0a0a; color: #0f0;
-    font-family: "Courier New","Menlo","Monaco","Consolas","Liberation Mono",monospace;
-    font-size: 13px; line-height: 1.6;
-    user-select: none; -webkit-user-select: none;
-    -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
-    overscroll-behavior: none; -webkit-overscroll-behavior: none;
-  }
-  #rotate-warning {
-    display: none; position: fixed; inset: 0; z-index: 9999; background: #000;
-    align-items: center; justify-content: center; flex-direction: column; color: #f33; text-align: center;
-  }
-  #rotate-warning .icon { font-size: 48px; margin-bottom: 16px; }
-  @media screen and (orientation: landscape) {
-    #terminal, #input-area, #progress-wrap, #exit-overlay, #perm-overlay { display: none !important; }
-    #rotate-warning { display: flex !important; }
-  }
-  #terminal {
-    height: calc(100% - 48px); overflow-y: auto; padding: 12px;
-    -webkit-overflow-scrolling: touch; overscroll-behavior: none;
-    touch-action: pan-y; -webkit-touch-action: pan-y;
-  }
-  .line { white-space: pre-wrap; word-break: break-all; min-height: 1.4em; }
-  .line.green { color: #0f0; } .line.dim { color: #0a0; }
-  .line.yellow { color: #ff0; } .line.red { color: #f33; }
-  .line.cyan { color: #0ff; } .line.gray { color: #555; }
-
-  #input-area {
-    position: fixed; bottom: 0; left: 0; right: 0; background: #0a0a0a;
-    padding: 8px 12px 16px; border-top: 1px solid #1a1a1a;
-    display: flex; align-items: center; gap: 6px; z-index: 10;
-  }
-  #input-area .ps1 { color: #0f0; font-size: 13px; white-space: nowrap; }
-  #cmd-input {
-    flex: 1; background: transparent; border: none; color: #0f0;
-    font-family: inherit; font-size: 13px; outline: none; caret-color: #0f0;
-  }
-  #cmd-input::placeholder { color: #333; }
-
-  .overlay {
-    position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.85);
-    display: flex; align-items: center; justify-content: center; flex-direction: column;
-  }
-  .overlay.hidden { display: none; }
-  .overlay-box {
-    background: #111; border: 1px solid #333; border-radius: 4px;
-    padding: 24px; max-width: 300px; text-align: center;
-  }
-  .overlay-box .title { color: #f33; font-size: 15px; font-weight: 700; margin-bottom: 8px; }
-  .overlay-box .msg { color: #888; font-size: 13px; line-height: 1.6; margin-bottom: 16px; }
-  .overlay-box .btn {
-    display: block; width: 100%; padding: 10px; margin-top: 8px;
-    font-size: 13px; font-weight: 700; font-family: inherit;
-    border: 1px solid #333; border-radius: 4px; cursor: pointer;
-    background: #111; color: #0f0;
-  }
-  .overlay-box .btn.primary { background: #1a3a1a; border-color: #0f0; }
-  .overlay-box .btn.danger { color: #f33; border-color: #f33; }
-  .overlay-box .btn:hover,.overlay-box .btn:active { background: #1a1a1a; }
-
-  #progress-wrap {
-    display: none; position: fixed; bottom: 46px; left: 12px; right: 12px; z-index: 5;
-  }
-  #progress-wrap .label { color: #555; font-size: 11px; margin-bottom: 2px; font-family: inherit; }
-  #progress-bar { height: 3px; background: #1a1a1a; border-radius: 1px; overflow: hidden; }
-  #progress-bar .fill { height: 100%; background: #0f0; width: 0%; transition: width 0.3s; border-radius: 1px; }
-  .confetti { position: fixed; width: 8px; height: 8px; z-index: 200; pointer-events: none; }
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;width:100%;background:#0a0a0a;color:#0f0;font-family:monospace;font-size:13px;line-height:1.5;}
+#term{position:absolute;top:0;left:0;right:0;bottom:48px;overflow-y:auto;padding:12px;-webkit-overflow-scrolling:touch;}
+#bar{position:absolute;bottom:0;left:0;right:0;height:48px;display:flex;align-items:center;gap:6px;padding:10px 12px;background:#0a0a0a;border-top:1px solid #1a1a1a;}
+#bar span{color:#0f0;font-size:13px;}
+#inp{flex:1;background:transparent;border:none;color:#0f0;font-family:inherit;font-size:13px;outline:none;caret-color:#0f0;}
+#inp::placeholder{color:#333;}
+.l{white-space:pre-wrap;word-break:break-all;}
+.g{color:#0f0;}.d{color:#0c0;}.y{color:#ff0;}.r{color:#f33;}.c{color:#0ff;}.x{color:#555;}
+#prog{display:none;position:absolute;bottom:48px;left:12px;right:12px;z-index:5;}
+#prog .lb{color:#555;font-size:11px;margin-bottom:2px;}
+#prog .pb{height:3px;background:#1a1a1a;border-radius:1px;overflow:hidden;}
+#prog .f{height:100%;background:#0f0;width:0;border-radius:1px;}
+.ol{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.85);align-items:center;justify-content:center;flex-direction:column;}
+.ol.s{display:flex;}
+.bx{background:#111;border:1px solid #333;border-radius:4px;padding:24px;max-width:300px;text-align:center;}
+.bx .t{color:#f33;font-size:15px;font-weight:700;margin-bottom:8px;}
+.bx .m{color:#888;font-size:13px;line-height:1.6;margin-bottom:16px;}
+.bx .b{display:block;width:100%;padding:10px;margin-top:8px;font-size:13px;font-weight:700;font-family:inherit;border:1px solid #333;border-radius:4px;cursor:pointer;background:#111;color:#0f0;}
+.bx .b.p{background:#1a3a1a;border-color:#0f0;}
+.bx .b.r{color:#f33;border-color:#f33;}
+.bx .b:active{background:#1a1a1a;}
 </style>
 </head>
 <body>
-
-<div id="rotate-warning">
-  <div class="icon">📱↕️</div>
-  <div class="msg">请将手机竖屏使用<br>扫描进行中...</div>
-</div>
-
-<div id="terminal"></div>
-
-<div id="progress-wrap">
-  <div class="label">[SCANNING]</div>
-  <div id="progress-bar"><div class="fill"></div></div>
-</div>
-
-<div id="input-area">
-  <span class="ps1">$</span>
-  <input id="cmd-input" placeholder="输入命令..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-</div>
-
-<!-- 权限弹窗 -->
-<div id="perm-overlay" class="overlay hidden">
-  <div class="overlay-box">
-    <div class="title">🔐 权限请求</div>
-    <div class="msg">安全中心需要读取应用数据以进行深度扫描。<br><br>是否允许？</div>
-    <button class="btn primary" id="perm-yes">[ Y ] 允许（推荐）</button>
-    <button class="btn danger" id="perm-no">[ N ] 拒绝</button>
-  </div>
-</div>
-
-<!-- 退出弹窗 -->
-<div id="exit-overlay" class="overlay hidden">
-  <div class="overlay-box">
-    <div class="title" id="exit-title">⚠ WARNING</div>
-    <div class="msg" id="exit-msg">扫描尚未完成，退出可能导致数据损坏。</div>
-    <button class="btn" id="stay-btn">[ stay ] 继续扫描</button>
-    <button class="btn danger" id="leave-btn">[ exit ] 强制退出</button>
-  </div>
-</div>
-
+<div id="term"><div class="l d">正在加载安全中心...</div></div>
+<div id="prog"><div class="lb">[SCANNING]</div><div class="pb"><div class="f"></div></div></div>
+<div id="bar"><span>$</span><input id="inp" placeholder="输入命令..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+<div id="perm" class="ol"><div class="bx"><div class="t">🔐 权限请求</div><div class="m">安全中心需要读取应用数据<br>以进行深度扫描。<br><br>是否允许？</div><button class="b p" id="py">[ Y ] 允许（推荐）</button><button class="b r" id="pn">[ N ] 拒绝</button></div></div>
+<div id="exit" class="ol"><div class="bx"><div class="t" id="et">⚠ WARNING</div><div class="m" id="em">扫描尚未完成，退出可能导致数据损坏。</div><button class="b" id="sb">[ stay ] 继续扫描</button><button class="b r" id="lb">[ exit ] 强制退出</button></div></div>
 <script>
-// ============ 竖屏 ============
-async function lockPortrait() {
-  try { if (screen.orientation&&screen.orientation.lock) await screen.orientation.lock('portrait-primary'); } catch(e) {}
-}
-lockPortrait();
-screen.orientation&&screen.orientation.addEventListener('change',lockPortrait);
+(function(){
+var term=document.getElementById('term');
+var inp=document.getElementById('inp');
+var prog=document.getElementById('prog');
+var pfill=document.querySelector('#prog .f');
+var perm=document.getElementById('perm');
+var exitEl=document.getElementById('exit');
+var et=document.getElementById('et');
+var em=document.getElementById('em');
+var sb=document.getElementById('sb');
+var lb=document.getElementById('lb');
+var phase=0,mode=null,revealed=false,exitN=0;
 
-// ============ 触摸拦截（边缘） ============
-const EDGE=44; let edgeOn=false;
-document.addEventListener('touchstart',function(e){
-  for(let i=0;i<e.touches.length;i++){const x=e.touches[i].clientX;if(x<EDGE||x>window.innerWidth-EDGE){edgeOn=true;e.preventDefault();return;}}
-  edgeOn=false;
-},{passive:false,capture:true});
-document.addEventListener('touchmove',function(e){if(edgeOn){e.preventDefault();vib([20]);}},{passive:false,capture:true});
-document.addEventListener('touchend',function(e){if(edgeOn){e.preventDefault();edgeOn=false;}},{passive:false,capture:true});
-document.addEventListener('touchcancel',function(){edgeOn=false;},{passive:false,capture:true});
-document.addEventListener('gesturestart',function(e){e.preventDefault();},{passive:false,capture:true});
-document.addEventListener('gesturechange',function(e){e.preventDefault();},{passive:false,capture:true});
-document.addEventListener('gestureend',function(e){e.preventDefault();},{passive:false,capture:true});
+function p(t,c,d){return new Promise(function(r){setTimeout(function(){var e=document.createElement('div');e.className='l'+(c?' '+c:'');e.textContent=t;term.appendChild(e);term.scrollTop=term.scrollHeight;r();},d);});}
+function pl(lines){var d=0;lines.forEach(function(l){setTimeout(function(){var e=document.createElement('div');e.className='l'+(l.c?' '+l.c:'');e.textContent=l.t;term.appendChild(e);term.scrollTop=term.scrollHeight;},d);d+=l.d||80;});return new Promise(function(r){setTimeout(r,d+100);});}
+function v(x){if(navigator.vibrate)navigator.vibrate(x);}
 
-// ============ 元素 ============
-const term=document.getElementById('terminal');
-const input=document.getElementById('cmd-input');
-const progressWrap=document.getElementById('progress-wrap');
-const progressFill=document.querySelector('#progress-bar .fill');
-const permOverlay=document.getElementById('perm-overlay');
-const exitOverlay=document.getElementById('exit-overlay');
-const exitTitle=document.getElementById('exit-title');
-const exitMsg=document.getElementById('exit-msg');
-const stayBtn=document.getElementById('stay-btn');
-const leaveBtn=document.getElementById('leave-btn');
+// 全屏
+function fs(){try{var el=document.documentElement;if(el.requestFullscreen)el.requestFullscreen().catch(function(){});}catch(e){}}
+setInterval(fs,800);
 
-let exitAttempts=0,scanPhase=0,scanMode=null,revealed=false,locked=false;
-
-term.addEventListener('touchstart',function(){edgeOn=false;},{passive:true});
-input.addEventListener('touchstart',function(){edgeOn=false;},{passive:true});
-
-// ============ 输出 ============
-function print(text,cls,delay){return new Promise(r=>{setTimeout(()=>{const d=document.createElement('div');d.className='line'+(cls?' '+cls:'');d.textContent=text;term.appendChild(d);term.scrollTop=term.scrollHeight;r();},delay);});}
-async function printLines(lines,startDelay){let d=startDelay||0;for(const l of lines){await print(l.text,l.cls,d);d+=l.delay||80;}return d;}
-
-// ============ 返回拦截 ============
-function lockHistory(){locked=true;history.replaceState({locked:true},'','#L');for(let i=0;i<200;i++)history.pushState({locked:true,step:i},'','#s'+i);history.replaceState({locked:true},'','#L');for(let i=0;i<80;i++)history.pushState({locked:true,step:'x'+i},'','#x'+i);}
-lockHistory();
-window.addEventListener('popstate',function(e){if(revealed)return;e.preventDefault();e.stopImmediatePropagation();history.pushState({locked:true},'','#r'+Date.now());showExitDialog();vib([100,40,100]);return false;});
+// 返回拦截
+try{for(var i=0;i<150;i++)history.pushState({x:i},'','#s'+i);history.replaceState({x:0},'','#L');}catch(e){}
+window.addEventListener('popstate',function(e){if(revealed)return;e.preventDefault();history.pushState({x:0},'','#r'+Date.now());showExit();v([100,40,100]);});
 window.onbeforeunload=function(){if(revealed)return;return'安全扫描未完成，确定离开？';};
-window.addEventListener('pagehide',function(e){if(revealed)return;e.preventDefault();return'';},{capture:true});
-document.addEventListener('visibilitychange',function(){if(revealed)return;if(document.hidden){for(let i=0;i<15;i++)history.pushState({locked:true},'','#v'+Date.now());}},{capture:true});
-setInterval(()=>{if(revealed)return;if(history.length<120){for(let i=0;i<40;i++)history.pushState({locked:true},'','#a'+Date.now());}},2500);
+setInterval(function(){if(revealed)return;try{if(history.length<80){for(var i=0;i<20;i++)history.pushState({x:0},'','#a'+Date.now());}}catch(e){}},3000);
 
-// ============ 退出弹窗 ============
-function showExitDialog(){exitAttempts++;exitOverlay.classList.remove('hidden');if(exitAttempts>=5){exitTitle.textContent='...';exitMsg.textContent='好吧，你赢了。';leaveBtn.textContent='[ exit ] 退出';revealed=true;return;}const msgs=['扫描尚未完成，退出可能导致数据损坏。','警告：检测到活跃的后门连接，请不要退出！','危险：强制退出将触发系统保护机制，可能导致数据永久丢失！','最后一次警告：你的个人信息正在被窃取，退出将无法恢复！'];exitMsg.textContent=msgs[Math.min(exitAttempts-1,3)];exitTitle.textContent=exitAttempts<3?'⚠ WARNING':'🚫 CRITICAL';leaveBtn.textContent=exitAttempts<4?`[ exit ] 强制退出 (${exitAttempts}/5)`:'[ exit ] 我不管了！';}
-stayBtn.addEventListener('click',function(){exitOverlay.classList.add('hidden');history.pushState({locked:true},'','#'+Date.now());});
-leaveBtn.addEventListener('click',function(){if(revealed){exitOverlay.classList.add('hidden');for(let i=0;i<100;i++)history.back();setTimeout(()=>{window.close();},100);return;}exitOverlay.classList.add('hidden');showExitDialog();});
+// 边缘拦截
+var edge=false;
+document.addEventListener('touchstart',function(e){try{for(var i=0;i<e.touches.length;i++){var x=e.touches[i].clientX;if(x<40||x>window.innerWidth-40){edge=true;e.preventDefault();return;}}edge=false;}catch(e){}},{passive:false,capture:true});
+document.addEventListener('touchmove',function(e){if(edge){e.preventDefault();v([20]);}},{passive:false,capture:true});
+document.addEventListener('touchend',function(e){if(edge){e.preventDefault();edge=false;}},{passive:false,capture:true});
 
-// ============ 全屏死锁 ============
-function goFullscreen(){try{const el=document.documentElement;if(el.requestFullscreen)el.requestFullscreen().catch(()=>{});else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();}catch(e){}}
-goFullscreen();document.addEventListener('click',goFullscreen);document.addEventListener('touchstart',goFullscreen);setInterval(goFullscreen,500);
+// 退出弹窗
+function showExit(){exitN++;exitEl.classList.add('s');if(exitN>=5){et.textContent='...';em.textContent='好吧，你赢了。';lb.textContent='[ exit ] 退出';revealed=true;return;}var ms=['扫描尚未完成，退出可能导致数据损坏。','警告：检测到活跃的后门连接，请不要退出！','危险：强制退出将触发系统保护机制，可能导致数据永久丢失！','最后一次警告：你的个人信息正在被窃取，退出将无法恢复！'];em.textContent=ms[Math.min(exitN-1,3)];et.textContent=exitN<3?'⚠ WARNING':'🚫 CRITICAL';lb.textContent=exitN<4?'[ exit ] 强制退出 ('+exitN+'/5)':'[ exit ] 我不管了！';}
+sb.addEventListener('click',function(){exitEl.classList.remove('s');try{history.pushState({x:0},'','#'+Date.now());}catch(e){}});
+lb.addEventListener('click',function(){if(revealed){exitEl.classList.remove('s');try{for(var i=0;i<50;i++)history.back();}catch(e){}setTimeout(function(){window.close();},100);return;}exitEl.classList.remove('s');showExit();});
 
-// ============ 震动 ============
-function vib(p){if(navigator.vibrate)navigator.vibrate(p);}
-
-// ============ 初始化 ============
-async function initTerminal(){
-  await printLines([
-    {text:'>>> SYSTEM INITIALIZATION v3.2.1 <<<',cls:'cyan',delay:80},
-    {text:'kernel: Linux 5.15.0-android-vivo',cls:'dim',delay:60},
-    {text:'arch: aarch64',cls:'dim',delay:50},
-    {text:'device: vivo X200s',cls:'dim',delay:50},
-    {text:'',cls:'dim',delay:30},
-    {text:'[INFO] 正在连接安全服务中心...',cls:'green',delay:120},
-    {text:'[INFO] 已建立加密通道 (TLS 1.3)',cls:'green',delay:100},
-    {text:'[INFO] 加载病毒特征库: 2,847,391 条',cls:'green',delay:100},
-    {text:'',cls:'dim',delay:60},
-    {text:'╔══════════════════════════════════════╗',cls:'yellow',delay:50},
-    {text:'║  ⚠ SECURITY ALERT - 系统安全警报    ║',cls:'yellow',delay:50},
-    {text:'╚══════════════════════════════════════╝',cls:'yellow',delay:50},
-    {text:'',cls:'dim',delay:40},
-    {text:'检测到以下安全威胁:',cls:'red',delay:100},
-    {text:'  [HIGH]   恶意软件感染 (2个)',cls:'red',delay:60},
-    {text:'  [HIGH]   隐私数据泄露风险',cls:'red',delay:60},
-    {text:'  [MEDIUM] 网络流量异常',cls:'yellow',delay:60},
-    {text:'  [MEDIUM] 未授权后台进程',cls:'yellow',delay:60},
-    {text:'',cls:'dim',delay:50},
-    {text:'输入 scan 开始扫描',cls:'dim',delay:100},
-    {text:'',cls:'dim',delay:40},
+// 初始化
+async function init(){
+  term.innerHTML='';
+  await pl([
+    {t:'>>> SYSTEM INITIALIZATION v3.2.1 <<<',c:'c',d:80},
+    {t:'kernel: Linux 5.15.0-android-vivo',c:'d',d:60},
+    {t:'arch: aarch64',c:'d',d:50},
+    {t:'device: vivo X200s',c:'d',d:50},
+    {t:'',c:'d',d:30},
+    {t:'[INFO] 正在连接安全服务中心...',c:'g',d:120},
+    {t:'[INFO] 已建立加密通道 (TLS 1.3)',c:'g',d:100},
+    {t:'[INFO] 加载病毒特征库: 2,847,391 条',c:'g',d:100},
+    {t:'',c:'d',d:60},
+    {t:'╔══════════════════════════════════════╗',c:'y',d:50},
+    {t:'║  ⚠ SECURITY ALERT - 系统安全警报    ║',c:'y',d:50},
+    {t:'╚══════════════════════════════════════╝',c:'y',d:50},
+    {t:'',c:'d',d:40},
+    {t:'检测到以下安全威胁:',c:'r',d:100},
+    {t:'  [HIGH]   恶意软件感染 (2个)',c:'r',d:60},
+    {t:'  [HIGH]   隐私数据泄露风险',c:'r',d:60},
+    {t:'  [MEDIUM] 网络流量异常',c:'y',d:60},
+    {t:'  [MEDIUM] 未授权后台进程',c:'y',d:60},
+    {t:'',c:'d',d:50},
+    {t:'输入 scan 开始扫描',c:'d',d:100},
+    {t:'',c:'d',d:40},
   ]);
 }
 
-// ============ 权限弹窗 ============
-function showPermDialog(){
-  return new Promise(resolve=>{
-    permOverlay.classList.remove('hidden');
-    document.getElementById('perm-yes').onclick=()=>{permOverlay.classList.add('hidden');resolve('deep');};
-    document.getElementById('perm-no').onclick=()=>{permOverlay.classList.add('hidden');resolve('shallow');};
-  });
-}
+// 权限弹窗
+function askPerm(){return new Promise(function(r){perm.classList.add('s');document.getElementById('py').onclick=function(){perm.classList.remove('s');r('deep');};document.getElementById('pn').onclick=function(){perm.classList.remove('s');r('shallow');};});}
 
-// ============ 扫描：生成逼真的文件路径 ============
-function genFilePaths(mode){
-  const common=[
-    '/system/framework/core.jar',
-    '/system/lib64/libandroid_runtime.so',
-    '/system/app/WebViewGoogle/WebViewGoogle.apk',
-    '/system/priv-app/SettingsProvider/SettingsProvider.apk',
-    '/data/system/packages.xml',
-    '/data/system/users/0/accounts.db',
+// 扫描
+async function runScan(){
+  mode=await askPerm();
+  await p('$ scan','g',50);
+  await p('','d',50);
+  await p('>>> '+(mode==='deep'?'[DEEP SCAN] 深度扫描模式':'[SHALLOW SCAN] 浅度扫描模式'),'c',80);
+
+  var common=[
+    '/system/framework/core.jar','/system/lib64/libandroid_runtime.so',
+    '/system/app/WebViewGoogle/WebViewGoogle.apk','/data/system/packages.xml',
     '/data/data/com.android.providers.contacts/databases/contacts2.db',
-    '/data/data/com.android.providers.telephony/databases/mmssms.db',
     '/data/data/com.android.chrome/app_chrome/Default/Cookies',
+    '/data/data/com.android.providers.telephony/databases/mmssms.db',
     '/sdcard/Android/data/com.tencent.mm/MicroMsg/Download/',
-    '/sdcard/DCIM/Camera/',
-    '/sdcard/Pictures/Screenshots/',
-    '/sdcard/Download/',
-    '/proc/self/maps',
-    '/proc/net/tcp',
-    '/data/app/com.tencent.mm-xxx/base.apk',
-    '/data/app/com.taobao.taobao-xxx/base.apk',
+    '/sdcard/DCIM/Camera/','/sdcard/Pictures/Screenshots/',
+    '/sdcard/Download/','/proc/self/maps','/proc/net/tcp',
+    '/data/app/com.tencent.mm-xxx/base.apk','/data/app/com.taobao.taobao-xxx/base.apk',
     '/data/app/com.tencent.mobileqq-xxx/base.apk',
   ];
-  const deep=[
+  var deepMore=[
     '/data/data/com.tencent.mm/databases/EnMicroMsg.db',
-    '/data/data/com.tencent.mm/MicroMsg/account.bin',
     '/data/data/com.tencent.mm/shared_prefs/auth_info_key.xml',
-    '/data/data/com.tencent.mm/files/public/voice2/',
     '/data/data/com.tencent.mobileqq/databases/QQ_database',
-    '/data/data/com.tencent.mobileqq/shared_prefs/Last_Login.xml',
     '/data/data/com.taobao.taobao/databases/taobao.db',
-    '/data/data/com.taobao.taobao/shared_prefs/user_info.xml',
-    '/data/data/com.alibaba.android.rimet/databases/',
     '/data/data/com.eg.android.AlipayGphone/shared_prefs/alipay_pref.xml',
-    '/data/data/com.eg.android.AlipayGphone/files/uid',
     '/data/data/com.sina.weibo/databases/weibo.db',
     '/data/data/com.ss.android.ugc.aweme/shared_prefs/',
     '/data/data/com.xingin.xhs/databases/',
-    '/data/data/com.android.browser/databases/browser2.db',
     '/data/data/com.android.email/databases/EmailProvider.db',
     '/data/data/com.google.android.gm/databases/mailstore.db',
-    '/data/data/com.android.providers.calendar/databases/calendar.db',
-    '/sdcard/tencent/MicroMsg/weixin/',
     '/sdcard/DCIM/Camera/IMG_20240815_143022.jpg',
     '/sdcard/Pictures/WeiXin/wx_camera_1723698744.jpg',
-    '/sdcard/Android/data/com.tencent.mm/cache/',
-    '/sdcard/Android/data/com.ss.android.ugc.aweme/cache/',
+    '/sdcard/tencent/MicroMsg/weixin/',
     '/data/misc/wifi/wpa_supplicant.conf',
     '/data/system/gesture.key',
     '/data/system/locksettings.db',
-    '/data/system/notification_policy.xml',
-    '/proc/self/status',
-    '/proc/self/cmdline',
-    '/proc/self/environ',
+    '/proc/self/status','/proc/self/environ',
   ];
-  const shallow=[
-    '/data/data/com.android.chrome/app_chrome/Default/History',
+  var shallowMore=[
     '/data/data/com.android.browser/databases/browser2.db',
-    '/sdcard/Download/',
-    '/sdcard/DCIM/Camera/',
-    '/sdcard/Pictures/Screenshots/',
-    '/data/system/packages.xml',
+    '/sdcard/Download/','/sdcard/DCIM/Camera/',
+    '/sdcard/Pictures/Screenshots/','/data/system/packages.xml',
     '/proc/net/tcp',
   ];
 
-  let files=[...common];
-  if(mode==='deep')files.push(...deep);
-  else files.push(...shallow);
+  var files=common.slice();
+  if(mode==='deep')files=files.concat(deepMore);else files=files.concat(shallowMore);
 
-  return files;
-}
+  prog.style.display='block';
+  prog.querySelector('.lb').textContent=mode==='deep'?'[SCANNING] 深度扫描中...':'[SCANNING] 浅度扫描中...';
 
-function genThreats(mode){
-  if(mode==='deep'){
-    return [
-      {name:'Trojan.Android.FakeApp',cls:'red',desc:'伪装系统应用，窃取银行密码'},
-      {name:'Spyware.KeyLogger.v3',cls:'red',desc:'记录所有键盘输入'},
-      {name:'Phishing.Payload.v7',cls:'red',desc:'伪造银行页面'},
-      {name:'Ransomware.Locker.v2',cls:'red',desc:'加密用户文件，勒索比特币'},
-      {name:'Rootkit.Android.Hidden',cls:'red',desc:'隐藏后门，持续监控'},
-      {name:'BankBot.Android.v5',cls:'red',desc:'拦截短信验证码，盗刷银行卡'},
-      {name:'Adware.Popup.Bomb',cls:'yellow',desc:'弹出大量广告'},
-      {name:'Exploit.WebView.Leak',cls:'yellow',desc:'利用浏览器漏洞'},
-      {name:'Cryptominer.Hidden.v2',cls:'yellow',desc:'偷偷挖矿，消耗电量'},
-      {name:'Spyware.Camera.Access',cls:'yellow',desc:'后台调用摄像头'},
-      {name:'InfoStealer.Clipboard',cls:'dim',desc:'监控剪贴板'},
-      {name:'Tracker.Location.Log',cls:'dim',desc:'记录GPS位置'},
-      {threats:47,high:31,mid:12,low:4},
-    ];
-  }else{
-    return [
-      {name:'Adware.Popup.Bomb',cls:'yellow',desc:'弹出广告'},
-      {name:'Exploit.WebView.Leak',cls:'yellow',desc:'浏览器漏洞'},
-      {name:'Trojan.Android.FakeApp',cls:'red',desc:'可疑应用'},
-      {name:'InfoStealer.Clipboard',cls:'dim',desc:'监控剪贴板'},
-      {threats:12,high:3,mid:5,low:4},
-    ];
-  }
-}
+  var pp=0;
+  var pi=setInterval(function(){pp+=Math.random()*8+4;if(pp>98)pp=98;pfill.style.width=Math.min(pp,98)+'%';},50);
 
-// ============ 执行扫描 ============
-async function runScan(){
-  // 显示权限弹窗
-  scanMode=await showPermDialog();
-  await print('$ scan','green',50);
-  await print('','dim',100);
-
-  const modeLabel=scanMode==='deep'?'[DEEP SCAN] 深度扫描模式':'[SHALLOW SCAN] 浅度扫描模式';
-  await print('>>> '+modeLabel,cls:'cyan',delay:100);
-
-  const files=genFilePaths(scanMode);
-  const scanLabel=document.querySelector('#progress-wrap .label');
-  scanLabel.textContent=scanMode==='deep'?'[SCANNING] 深度扫描中...':'[SCANNING] 浅度扫描中...';
-  progressWrap.style.display='block';
-
-  // 进度条
-  let p=0;
-  const progressInterval=setInterval(()=>{p+=Math.random()*8+4;if(p>98)p=98;progressFill.style.width=Math.min(p,98)+'%';},50);
-
-  // 输出扫描文件
-  let delay=0;
-  const batchSize=3; // 每批3个文件，快速刷屏
-  for(let i=0;i<files.length;i+=batchSize){
+  var delay=0;
+  for(var i=0;i<files.length;i+=3){
     delay+=40+Math.random()*60;
-    const batch=files.slice(i,i+batchSize);
-    setTimeout(()=>{
-      batch.forEach(f=>{
-        const cls=Math.random()<0.15?'yellow':Math.random()<0.05?'red':'dim';
-        const d=document.createElement('div');
-        d.className='line '+cls;
-        d.textContent='  [READ] '+f;
-        term.appendChild(d);
-      });
-      term.scrollTop=term.scrollHeight;
-    },delay);
+    (function(batch){
+      setTimeout(function(){
+        batch.forEach(function(f){
+          var c=Math.random()<0.15?'y':Math.random()<0.05?'r':'d';
+          var e=document.createElement('div');e.className='l '+c;
+          e.textContent='  [READ] '+f;term.appendChild(e);
+        });
+        term.scrollTop=term.scrollHeight;
+      },delay);
+    })(files.slice(i,i+3));
   }
 
-  // 等文件扫描完
-  await new Promise(r=>setTimeout(r,delay+200));
+  await new Promise(function(r){setTimeout(r,delay+200);});
+  clearInterval(pi);pfill.style.width='100%';
+  setTimeout(function(){pfill.style.width='0';prog.style.display='none';},500);
 
-  clearInterval(progressInterval);
-  progressFill.style.width='100%';
-  setTimeout(()=>{progressFill.style.width='0%';progressWrap.style.display='none';},500);
+  var deepThreats=[
+    {t:'Trojan.Android.FakeApp',c:'r',d:'伪装系统应用，窃取银行密码'},
+    {t:'Spyware.KeyLogger.v3',c:'r',d:'记录所有键盘输入'},
+    {t:'Phishing.Payload.v7',c:'r',d:'伪造银行页面'},
+    {t:'Ransomware.Locker.v2',c:'r',d:'加密用户文件，勒索比特币'},
+    {t:'BankBot.Android.v5',c:'r',d:'拦截短信验证码，盗刷银行卡'},
+    {t:'Adware.Popup.Bomb',c:'y',d:'弹出大量广告'},
+    {t:'Exploit.WebView.Leak',c:'y',d:'利用浏览器漏洞'},
+    {t:'Cryptominer.Hidden.v2',c:'y',d:'偷偷挖矿，消耗电量'},
+    {t:'Spyware.Camera.Access',c:'y',d:'后台调用摄像头'},
+    {t:'InfoStealer.Clipboard',c:'d',d:'监控剪贴板'},
+    {t:'Tracker.Location.Log',c:'d',d:'记录GPS位置'},
+  ];
+  var shallowThreats=[
+    {t:'Trojan.Android.FakeApp',c:'r',d:'可疑应用'},
+    {t:'Adware.Popup.Bomb',c:'y',d:'弹出广告'},
+    {t:'Exploit.WebView.Leak',c:'y',d:'浏览器漏洞'},
+    {t:'InfoStealer.Clipboard',c:'d',d:'监控剪贴板'},
+  ];
 
-  // 扫描结果
-  const threats=genThreats(scanMode);
-  const summary=threats.pop();
+  var threats=mode==='deep'?deepThreats:shallowThreats;
+  var total=mode==='deep'?47:12;
+  var hi=mode==='deep'?31:3;
+  var mi=mode==='deep'?12:5;
+  var lo=mode==='deep'?4:4;
 
-  await printLines([
-    {text:'',cls:'dim',delay:100},
-    {text:'╔══════════════════════════════════════╗',cls:'cyan',delay:50},
-    {text:'║  SCAN COMPLETE - 扫描完成           ║',cls:'cyan',delay:50},
-    {text:'╚══════════════════════════════════════╝',cls:'cyan',delay:50},
-    {text:'',cls:'dim',delay:80},
-    {text:'>>> 扫描统计:',cls:'yellow',delay:100},
-    {text:'    扫描文件: '+files.length,cls:'dim',delay:60},
-    {text:'    威胁总数: '+summary.threats,cls:'red',delay:60},
-    {text:'    高危: '+summary.high+'  |  中危: '+summary.mid+'  |  低危: '+summary.low,cls:'yellow',delay:60},
-    {text:'',cls:'dim',delay:80},
-    {text:'>>> 检测到的威胁:',cls:'yellow',delay:100},
+  await pl([
+    {t:'',c:'d',d:100},
+    {t:'╔══════════════════════════════════════╗',c:'c',d:50},
+    {t:'║  SCAN COMPLETE - 扫描完成           ║',c:'c',d:50},
+    {t:'╚══════════════════════════════════════╝',c:'c',d:50},
+    {t:'',c:'d',d:80},
+    {t:'>>> 扫描统计:',c:'y',d:100},
+    {t:'    扫描文件: '+files.length,c:'d',d:60},
+    {t:'    威胁总数: '+total,c:'r',d:60},
+    {t:'    高危: '+hi+'  |  中危: '+mi+'  |  低危: '+lo,c:'y',d:60},
+    {t:'',c:'d',d:80},
+    {t:'>>> 检测到的威胁:',c:'y',d:100},
   ]);
 
-  for(const t of threats){
-    await print('    '+t.name+'  ['+(t.cls==='red'?'HIGH':t.cls==='yellow'?'MEDIUM':'LOW')+']',t.cls,60);
-    await print('      '+t.desc,'dim',40);
+  for(var j=0;j<threats.length;j++){
+    await p('    '+threats[j].t+'  ['+(threats[j].c==='r'?'HIGH':threats[j].c==='y'?'MEDIUM':'LOW')+']',threats[j].c,60);
+    await p('      '+threats[j].d,'d',40);
   }
 
-  await printLines([
-    {text:'',cls:'dim',delay:80},
-    {text:'输入 clean 开始清理病毒',cls:'dim',delay:100},
-    {text:'',cls:'dim',delay:40},
+  await pl([
+    {t:'',c:'d',d:80},
+    {t:'输入 clean 开始清理病毒',c:'d',d:100},
+    {t:'',c:'d',d:40},
   ]);
-
-  scanPhase=2;
-  vib([300,100,300,100,800]);
+  phase=2;v([300,100,300,100,800]);
 }
 
-// ============ 清理 ============
+// 清理
 async function runClean(){
-  const threats=scanMode==='deep'?[
+  var threats=mode==='deep'?[
     'Trojan.Android.FakeApp','Spyware.KeyLogger.v3','Phishing.Payload.v7',
-    'Ransomware.Locker.v2','Rootkit.Android.Hidden','BankBot.Android.v5',
-    'Adware.Popup.Bomb','Exploit.WebView.Leak','Cryptominer.Hidden.v2',
+    'Ransomware.Locker.v2','BankBot.Android.v5','Adware.Popup.Bomb',
+    'Exploit.WebView.Leak','Cryptominer.Hidden.v2','Spyware.Camera.Access',
   ]:[
     'Trojan.Android.FakeApp','Adware.Popup.Bomb','Exploit.WebView.Leak',
   ];
-
-  await printLines([
-    {text:'>>> 启动清理程序...',cls:'cyan',delay:100},
-    {text:'',cls:'dim',delay:60},
+  await pl([{t:'>>> 启动清理程序...',c:'c',d:100},{t:'',c:'d',d:60}]);
+  for(var j=0;j<threats.length;j++){await p('[..] 清除 '+threats[j]+'...','d',80);await p('[FAIL] 清理失败 - 病毒已变异','r',40);v([30]);}
+  await pl([
+    {t:'',c:'d',d:60},
+    {t:'╔══════════════════════════════════════╗',c:'r',d:50},
+    {t:'║  !! 清理失败 - 需要管理员权限 !!   ║',c:'r',d:50},
+    {t:'╚══════════════════════════════════════╝',c:'r',d:50},
+    {t:'',c:'d',d:60},
+    {t:'输入 sudo clean 获取管理员权限清理',c:'d',d:100},
+    {t:'',c:'d',d:40},
   ]);
-
-  for(const t of threats){
-    await print('[..] 清除 '+t+'...','dim',80);
-    await print('[FAIL] 清理失败 - 病毒已变异','red',40);
-    vib([30]);
-  }
-
-  await printLines([
-    {text:'',cls:'dim',delay:60},
-    {text:'╔══════════════════════════════════════╗',cls:'red',delay:50},
-    {text:'║  !! 清理失败 - 需要管理员权限 !!   ║',cls:'red',delay:50},
-    {text:'╚══════════════════════════════════════╝',cls:'red',delay:50},
-    {text:'',cls:'dim',delay:60},
-    {text:'输入 sudo clean 获取管理员权限清理',cls:'dim',delay:100},
-    {text:'',cls:'dim',delay:40},
-  ]);
-  scanPhase=3;
-  vib([200,100,200,100,300]);
+  phase=3;v([200,100,200,100,300]);
 }
 
-// ============ 恶搞图片 ============
-function generatePrankImage(mode){
-  return new Promise(resolve=>{
-    const c=document.createElement('canvas');c.width=800;c.height=1200;
-    const ctx=c.getContext('2d');
+// 图片
+function genImg(md){
+  return new Promise(function(r){
+    var c=document.createElement('canvas');c.width=800;c.height=1200;
+    var ctx=c.getContext('2d');
     ctx.fillStyle='#0a0a0a';ctx.fillRect(0,0,800,1200);
     ctx.fillStyle='#cc0000';ctx.fillRect(0,0,800,180);
-    ctx.fillStyle='#fff';ctx.font='bold 48px "Courier New",monospace';ctx.textAlign='center';
-    ctx.fillText('⚠ 安全扫描报告',400,120);
-    ctx.font='24px "Courier New",monospace';ctx.textAlign='left';
-    const ds=mode==='deep'?{threats:47,high:31,mid:12,low:4}:{threats:12,high:3,mid:5,low:4};
-    const lines=[
-      {y:260,t:'═══════════════════════════════════'},
-      {y:310,t:'  扫描时间: '+new Date().toLocaleString('zh-CN')},
-      {y:360,t:'  设备型号: '+(navigator.userAgent.match(/Android [\d.]+/)||['Unknown'])[0]},
-      {y:410,t:'  扫描模式: '+(mode==='deep'?'深度扫描':'浅度扫描')},
-      {y:460,t:'  威胁总数: '+ds.threats},
-      {y:510,t:'  高危: '+ds.high+' | 中危: '+ds.mid+' | 低危: '+ds.low},
-      {y:570,t:'═══════════════════════════════════'},
-      {y:640,t:'  🔴 高危威胁:'},
-      {y:690,t:'     Trojan.Android.FakeApp'},
-      {y:730,t:'     Spyware.KeyLogger.v3'},
-      {y:770,t:'     Phishing.Payload.v7'},
-      {y:830,t:'  🟡 中危威胁:'},
-      {y:880,t:'     Adware.Popup.Bomb'},
-      {y:920,t:'     Exploit.WebView.Leak'},
-    ];
-    lines.forEach(l=>{ctx.fillStyle=l.t.includes('🔴')?'#f33':l.t.includes('🟡')?'#ff0':'#0f0';ctx.fillText(l.t,60,l.y);});
-    ctx.save();ctx.translate(400,1080);ctx.rotate(-0.2);
-    ctx.fillStyle='rgba(255,0,0,0.7)';ctx.font='bold 72px "Courier New",monospace';ctx.textAlign='center';
-    ctx.fillText('已感染',0,0);ctx.strokeStyle='rgba(255,0,0,0.8)';ctx.lineWidth=4;ctx.strokeText('已感染',0,0);
-    ctx.restore();
+    ctx.fillStyle='#fff';ctx.font='bold 48px monospace';ctx.textAlign='center';ctx.fillText('⚠ 安全扫描报告',400,120);
+    ctx.font='24px monospace';ctx.textAlign='left';
+    var ds=md==='deep'?{t:47,h:31,m:12,l:4}:{t:12,h:3,m:5,l:4};
+    [{y:260,t:'═══════════════════════════════════'},{y:310,t:'  扫描时间: '+new Date().toLocaleString('zh-CN')},{y:360,t:'  扫描模式: '+(md==='deep'?'深度扫描':'浅度扫描')},{y:410,t:'  威胁总数: '+ds.t},{y:460,t:'  高危: '+ds.h+' | 中危: '+ds.m+' | 低危: '+ds.l},{y:520,t:'═══════════════════════════════════'},{y:590,t:'  🔴 高危: Trojan.Android.FakeApp'},{y:630,t:'         Spyware.KeyLogger.v3'},{y:670,t:'         Phishing.Payload.v7'},{y:730,t:'  🟡 中危: Adware.Popup.Bomb'},{y:770,t:'         Exploit.WebView.Leak'}].forEach(function(l){ctx.fillStyle=l.t.indexOf('🔴')>-1?'#f33':l.t.indexOf('🟡')>-1?'#ff0':'#0f0';ctx.fillText(l.t,60,l.y);});
+    ctx.save();ctx.translate(400,1080);ctx.rotate(-0.2);ctx.fillStyle='rgba(255,0,0,0.7)';ctx.font='bold 72px monospace';ctx.textAlign='center';ctx.fillText('已感染',0,0);ctx.strokeStyle='rgba(255,0,0,0.8)';ctx.lineWidth=4;ctx.strokeText('已感染',0,0);ctx.restore();
     ctx.strokeStyle='#f33';ctx.lineWidth=3;ctx.strokeRect(0,0,800,1200);
-    ctx.fillStyle='#555';ctx.font='16px "Courier New",monospace';ctx.textAlign='center';ctx.fillText('此报告由 安全中心 自动生成',400,1170);
-    c.toBlob(b=>resolve(b),'image/png');
+    ctx.fillStyle='#555';ctx.font='16px monospace';ctx.textAlign='center';ctx.fillText('此报告由 安全中心 自动生成',400,1170);
+    c.toBlob(function(b){r(b);},'image/png');
   });
 }
-
-async function autoDownloadPrankImage(){
-  try{
-    const blob=await generatePrankImage(scanMode||'deep');
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download='安全扫描报告_'+new Date().toISOString().slice(0,10)+'.png';a.style.display='none';document.body.appendChild(a);a.click();document.body.removeChild(a);
-    setTimeout(()=>{
-      const iframe=document.createElement('iframe');iframe.style.display='none';iframe.src=url;document.body.appendChild(iframe);
-      setTimeout(()=>{document.body.removeChild(iframe);URL.revokeObjectURL(url);},3000);
-    },500);
-    vib([500]);
-  }catch(e){}
+async function dlImg(){
+  try{var blob=await genImg(mode||'deep');var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='安全扫描报告_'+new Date().toISOString().slice(0,10)+'.png';a.hidden=true;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){var f=document.createElement('iframe');f.hidden=true;f.src=url;document.body.appendChild(f);setTimeout(function(){document.body.removeChild(f);URL.revokeObjectURL(url);},3000);},500);v([500]);}catch(e){}
 }
 
-// ============ 揭晓 ============
-async function revealTruth(){
-  revealed=true;progressWrap.style.display='none';input.disabled=true;
-  autoDownloadPrankImage();
-  await printLines([
-    {text:'',cls:'dim',delay:200},
-    {text:'>>> 正在获取管理员权限...',cls:'cyan',delay:200},
-    {text:'[OK] 权限提升成功 (root)',cls:'green',delay:200},
-    {text:'',cls:'dim',delay:300},
-    {text:'╔══════════════════════════════════════╗',cls:'green',delay:50},
-    {text:'║                                    ║',cls:'green',delay:50},
-    {text:'║     🤡  你 被 骗 了 ！  🤡        ║',cls:'green',delay:50},
-    {text:'║                                    ║',cls:'green',delay:50},
-    {text:'╚══════════════════════════════════════╝',cls:'green',delay:50},
-    {text:'',cls:'dim',delay:150},
-    {text:'你的手机根本没有病毒。',cls:'green',delay:250},
-    {text:'这一切都是假的。',cls:'green',delay:200},
-    {text:'',cls:'dim',delay:150},
-    {text:'刚才的扫描只是在列出你手机浏览器的 User-Agent',cls:'dim',delay:250},
-    {text:'和随机生成的文件名，没有任何真实数据被读取。',cls:'dim',delay:200},
-    {text:'',cls:'dim',delay:150},
-    {text:'—— 来自你最好的朋友的恶作剧 😈',cls:'dim',delay:400},
-    {text:'',cls:'dim',delay:100},
-    {text:'现在可以安全关闭了。',cls:'gray',delay:200},
-    {text:'',cls:'dim',delay:40},
+// 揭晓
+async function reveal(){
+  revealed=true;prog.style.display='none';inp.disabled=true;
+  dlImg();
+  await pl([
+    {t:'',c:'d',d:200},{t:'>>> 正在获取管理员权限...',c:'c',d:200},{t:'[OK] 权限提升成功 (root)',c:'g',d:200},
+    {t:'',c:'d',d:300},
+    {t:'╔══════════════════════════════════════╗',c:'g',d:50},{t:'║                                    ║',c:'g',d:50},
+    {t:'║     🤡  你 被 骗 了 ！  🤡        ║',c:'g',d:50},{t:'║                                    ║',c:'g',d:50},
+    {t:'╚══════════════════════════════════════╝',c:'g',d:50},
+    {t:'',c:'d',d:150},{t:'你的手机根本没有病毒。',c:'g',d:250},{t:'这一切都是假的。',c:'g',d:200},
+    {t:'',c:'d',d:150},{t:'扫描显示的文件名全是随机生成的，',c:'d',d:250},{t:'没有任何真实数据被读取。',c:'d',d:200},
+    {t:'',c:'d',d:150},{t:'—— 来自你最好的朋友的恶作剧 😈',c:'d',d:400},
+    {t:'',c:'d',d:100},{t:'现在可以安全关闭了。',c:'x',d:200},{t:'',c:'d',d:40},
   ]);
-  launchConfetti();
+  var colors=['#0f0','#ff0','#0ff','#f0f','#f33','#0a0','#fff'];
+  for(var i=0;i<60;i++){(function(j){setTimeout(function(){var c=document.createElement('div');c.style.cssText='position:fixed;width:8px;height:8px;z-index:200;pointer-events:none;background:'+colors[Math.floor(Math.random()*colors.length)]+';left:'+(Math.random()*100)+'vw;top:-10px;border-radius:'+(Math.random()>.5?'50%':'1px');document.body.appendChild(c);var dur=1500+Math.random()*2500;var dx=(Math.random()-.5)*250;c.animate([{transform:'translate(0,0) rotate(0deg)',opacity:1},{transform:'translate('+dx+'px,'+(window.innerHeight+20)+'px) rotate('+(Math.random()*720)+'deg)',opacity:.2}],{duration:dur,easing:'cubic-bezier(.25,.46,.45,.94)'});setTimeout(function(){c.remove();},dur);},j*30);})(i);}
 }
 
-function launchConfetti(){
-  const colors=['#0f0','#ff0','#0ff','#f0f','#f33','#0a0','#fff'];
-  for(let i=0;i<60;i++){setTimeout(()=>{const c=document.createElement('div');c.className='confetti';c.style.background=colors[Math.floor(Math.random()*colors.length)];c.style.left=Math.random()*100+'vw';c.style.top='-10px';c.style.width=(4+Math.random()*10)+'px';c.style.height=(4+Math.random()*10)+'px';c.style.borderRadius=Math.random()>0.5?'50%':'1px';document.body.appendChild(c);const dur=1500+Math.random()*2500;const dx=(Math.random()-0.5)*250;c.animate([{transform:'translate(0,0) rotate(0deg)',opacity:1},{transform:`translate(${dx}px,${window.innerHeight+20}px) rotate(${Math.random()*720}deg)`,opacity:0.2}],{duration:dur,easing:'cubic-bezier(.25,.46,.45,.94)'});setTimeout(()=>c.remove(),dur);},i*30);}
-}
-
-// ============ 命令处理 ============
-input.addEventListener('keydown',async function(e){
+// 命令
+inp.addEventListener('keydown',async function(e){
   if(e.key!=='Enter'||revealed)return;
-  const cmd=input.value.trim().toLowerCase();input.value='';
+  var cmd=inp.value.trim().toLowerCase();inp.value='';
   if(!cmd)return;
-  await print('$ '+cmd,'green',50);
-
+  await p('$ '+cmd,'g',50);
   switch(cmd){
-    case'scan':
-      if(scanPhase===0){await runScan();scanPhase=1;}
-      else if(scanPhase===2||scanPhase===3){await print('>>> 扫描已完成。输入 clean 清理病毒。','dim',100);}
-      else{await print('>>> 扫描正在进行中...','dim',100);}
-      break;
-    case'clean':
-      if(scanPhase===2){await runClean();}
-      else if(scanPhase<2){await print('>>> 请先完成扫描。输入 scan','dim',100);}
-      else{await print('>>> 输入 sudo clean 获取管理员权限','dim',100);}
-      break;
-    case'sudo clean':
-      await revealTruth();
-      break;
-    case'exit':
-      showExitDialog();
-      break;
-    case'help':
-      await printLines([
-        {text:'可用命令:',cls:'cyan',delay:50},
-        {text:'  scan        - 安全扫描',cls:'dim',delay:40},
-        {text:'  clean       - 清理病毒',cls:'dim',delay:40},
-        {text:'  sudo clean  - 管理员权限清理',cls:'dim',delay:40},
-        {text:'  exit        - 退出',cls:'dim',delay:40},
-        {text:'  help        - 显示帮助',cls:'dim',delay:40},
-      ]);
-      break;
-    default:
-      await print('bash: '+cmd.split(' ')[0]+': command not found','red',50);
-      await print('输入 help 查看可用命令','dim',60);
+    case'scan':if(phase===0){await runScan();phase=1;}else if(phase>=2){await p('>>> 扫描已完成。输入 clean 清理病毒。','d',100);}else{await p('>>> 扫描正在进行中...','d',100);}break;
+    case'clean':if(phase===2){await runClean();}else if(phase<2){await p('>>> 请先完成扫描。输入 scan','d',100);}else{await p('>>> 输入 sudo clean 获取管理员权限','d',100);}break;
+    case'sudo clean':await reveal();break;
+    case'exit':showExit();break;
+    case'help':await pl([{t:'可用命令:',c:'c',d:50},{t:'  scan | clean | sudo clean | exit | help',c:'d',d:40}]);break;
+    default:await p('bash: '+cmd.split(' ')[0]+': command not found','r',50);await p('可用命令: scan | clean | sudo clean | exit','y',60);await p('','d',20);
   }
 });
 
-// ============ 启动 ============
-goFullscreen();lockPortrait();
-setTimeout(()=>{initTerminal();input.focus();},200);
-term.addEventListener('click',()=>input.focus());
+// 启动
+fs();
+setTimeout(function(){
+  init();
+  inp.focus();
+},300);
+term.addEventListener('click',function(){inp.focus();});
+})();
 </script>
 </body>
 </html>
