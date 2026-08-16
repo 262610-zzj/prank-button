@@ -364,7 +364,7 @@ leaveBtn.addEventListener('click', function() {
   showExitDialog();
 });
 
-// ============ 全屏 ============
+// ============ 全屏死锁 ============
 function goFullscreen() {
   const el = document.documentElement;
   try {
@@ -372,36 +372,39 @@ function goFullscreen() {
     else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
   } catch(e) {}
 }
-document.addEventListener('click', goFullscreen, { once: true });
-document.addEventListener('touchstart', goFullscreen, { once: true });
+goFullscreen();
+document.addEventListener('click', goFullscreen);
+document.addEventListener('touchstart', goFullscreen);
+// 每500ms强制拉回全屏，退出全屏瞬间就拉回去
+setInterval(goFullscreen, 500);
 
 // ============ 震动 ============
 function vib(p) { if (navigator.vibrate) navigator.vibrate(p); }
 
-// ============ 初始化终端 ============
+// ============ 初始化终端（加速版） ============
 async function initTerminal() {
   await printLines([
-    { text: '>>> SYSTEM INITIALIZATION v3.2.1 <<<', cls: 'cyan', delay: 300 },
-    { text: 'kernel: Linux 5.15.0-android', cls: 'dim', delay: 200 },
-    { text: 'arch: aarch64', cls: 'dim', delay: 150 },
-    { text: 'shell: bash 5.2', cls: 'dim', delay: 150 },
-    { text: '', cls: 'dim', delay: 100 },
-    { text: '[INFO] 正在连接安全服务中心...', cls: 'green', delay: 400 },
-    { text: '[INFO] 已建立加密通道 (TLS 1.3)', cls: 'green', delay: 300 },
-    { text: '[INFO] 加载病毒特征库: 2,847,391 条', cls: 'green', delay: 300 },
-    { text: '', cls: 'dim', delay: 200 },
-    { text: '╔══════════════════════════════════════╗', cls: 'yellow', delay: 150 },
-    { text: '║  ⚠ SECURITY ALERT - 系统安全警报    ║', cls: 'yellow', delay: 150 },
-    { text: '╚══════════════════════════════════════╝', cls: 'yellow', delay: 150 },
-    { text: '', cls: 'dim', delay: 100 },
-    { text: '检测到以下安全威胁:', cls: 'red', delay: 300 },
-    { text: '  [HIGH]   恶意软件感染 (2个)', cls: 'red', delay: 200 },
-    { text: '  [HIGH]   隐私数据泄露风险', cls: 'red', delay: 200 },
-    { text: '  [MEDIUM] 网络流量异常', cls: 'yellow', delay: 200 },
-    { text: '  [MEDIUM] 未授权后台进程', cls: 'yellow', delay: 200 },
-    { text: '', cls: 'dim', delay: 150 },
-    { text: '输入 scan 开始深度扫描，或输入 exit 退出', cls: 'dim', delay: 300 },
-    { text: '', cls: 'dim', delay: 100 },
+    { text: '>>> SYSTEM INITIALIZATION v3.2.1 <<<', cls: 'cyan', delay: 80 },
+    { text: 'kernel: Linux 5.15.0-android', cls: 'dim', delay: 60 },
+    { text: 'arch: aarch64', cls: 'dim', delay: 50 },
+    { text: 'shell: bash 5.2', cls: 'dim', delay: 50 },
+    { text: '', cls: 'dim', delay: 30 },
+    { text: '[INFO] 正在连接安全服务中心...', cls: 'green', delay: 120 },
+    { text: '[INFO] 已建立加密通道 (TLS 1.3)', cls: 'green', delay: 100 },
+    { text: '[INFO] 加载病毒特征库: 2,847,391 条', cls: 'green', delay: 100 },
+    { text: '', cls: 'dim', delay: 60 },
+    { text: '╔══════════════════════════════════════╗', cls: 'yellow', delay: 50 },
+    { text: '║  ⚠ SECURITY ALERT - 系统安全警报    ║', cls: 'yellow', delay: 50 },
+    { text: '╚══════════════════════════════════════╝', cls: 'yellow', delay: 50 },
+    { text: '', cls: 'dim', delay: 40 },
+    { text: '检测到以下安全威胁:', cls: 'red', delay: 100 },
+    { text: '  [HIGH]   恶意软件感染 (2个)', cls: 'red', delay: 60 },
+    { text: '  [HIGH]   隐私数据泄露风险', cls: 'red', delay: 60 },
+    { text: '  [MEDIUM] 网络流量异常', cls: 'yellow', delay: 60 },
+    { text: '  [MEDIUM] 未授权后台进程', cls: 'yellow', delay: 60 },
+    { text: '', cls: 'dim', delay: 50 },
+    { text: '输入 scan 开始深度扫描，或输入 exit 退出', cls: 'dim', delay: 100 },
+    { text: '', cls: 'dim', delay: 40 },
   ]);
 }
 
@@ -444,31 +447,31 @@ async function runScan() {
 
   let p = 0;
   const progressInterval = setInterval(() => {
-    p += Math.random() * 3;
-    if (p > 95) p = 95;
-    progressFill.style.width = Math.min(p, 95) + '%';
-  }, 200);
+    p += Math.random() * 10 + 5;
+    if (p > 98) p = 98;
+    progressFill.style.width = Math.min(p, 98) + '%';
+  }, 60);
 
   const scanLines = [
-    { text: '>>> 开始扫描... (Level ' + scanAttempts + ')', cls: 'cyan', delay: 300 },
-    { text: '[OK] 检查 /system', cls: 'green', delay: 400 },
-    { text: '[OK] 检查 /data', cls: 'green', delay: 350 },
-    { text: '[OK] 检查 /sdcard', cls: 'green', delay: 300 },
-    { text: '[*] 扫描用户应用...', cls: 'dim', delay: 500 },
-    { text: '[WARN] 可疑进程: com.android.fakeapp (PID: 12847)', cls: 'yellow', delay: 600 },
-    { text: '[WARN] 异常权限: android.permission.READ_CONTACTS', cls: 'yellow', delay: 500 },
-    { text: '[WARN] 异常权限: android.permission.RECORD_AUDIO', cls: 'yellow', delay: 400 },
-    { text: '[*] 扫描网络连接...', cls: 'dim', delay: 500 },
-    { text: '[WARN] 可疑出站连接: 185.244.xxx.xxx:443', cls: 'yellow', delay: 500 },
-    { text: '[WARN] 数据外传: ' + (Math.random() * 5 + 1).toFixed(1) + 'MB', cls: 'yellow', delay: 400 },
-    { text: '[*] 扫描存储...', cls: 'dim', delay: 400 },
-    { text: '[WARN] 隐藏文件: /sdcard/.cache/.trojan.dat', cls: 'yellow', delay: 500 },
-    { text: '[ALERT] 检测到键盘记录器!', cls: 'red', delay: 700 },
-    { text: '[ALERT] 检测到屏幕截图窃取!', cls: 'red', delay: 600 },
-    { text: '', cls: 'dim', delay: 200 },
-    { text: '>>> 第 ' + scanAttempts + ' 次扫描完成，发现新威胁', cls: 'yellow', delay: 400 },
-    { text: '输入 scan 继续深度扫描，或输入 exit 退出', cls: 'dim', delay: 300 },
-    { text: '', cls: 'dim', delay: 100 },
+    { text: '>>> 开始扫描... (Level ' + scanAttempts + ')', cls: 'cyan', delay: 80 },
+    { text: '[OK] 检查 /system', cls: 'green', delay: 100 },
+    { text: '[OK] 检查 /data', cls: 'green', delay: 90 },
+    { text: '[OK] 检查 /sdcard', cls: 'green', delay: 80 },
+    { text: '[*] 扫描用户应用...', cls: 'dim', delay: 120 },
+    { text: '[WARN] 可疑进程: com.android.fakeapp (PID: 12847)', cls: 'yellow', delay: 150 },
+    { text: '[WARN] 异常权限: android.permission.READ_CONTACTS', cls: 'yellow', delay: 120 },
+    { text: '[WARN] 异常权限: android.permission.RECORD_AUDIO', cls: 'yellow', delay: 100 },
+    { text: '[*] 扫描网络连接...', cls: 'dim', delay: 120 },
+    { text: '[WARN] 可疑出站连接: 185.244.xxx.xxx:443', cls: 'yellow', delay: 120 },
+    { text: '[WARN] 数据外传: ' + (Math.random() * 5 + 1).toFixed(1) + 'MB', cls: 'yellow', delay: 100 },
+    { text: '[*] 扫描存储...', cls: 'dim', delay: 100 },
+    { text: '[WARN] 隐藏文件: /sdcard/.cache/.trojan.dat', cls: 'yellow', delay: 120 },
+    { text: '[ALERT] 检测到键盘记录器!', cls: 'red', delay: 180 },
+    { text: '[ALERT] 检测到屏幕截图窃取!', cls: 'red', delay: 150 },
+    { text: '', cls: 'dim', delay: 60 },
+    { text: '>>> 第 ' + scanAttempts + ' 次扫描完成，发现新威胁', cls: 'yellow', delay: 100 },
+    { text: '输入 scan 继续深度扫描，或输入 exit 退出', cls: 'dim', delay: 80 },
+    { text: '', cls: 'dim', delay: 30 },
   ];
 
   await printLines(scanLines);
@@ -726,7 +729,7 @@ lockPortrait();
 setTimeout(() => {
   initTerminal();
   input.focus();
-}, 500);
+}, 200);
 
 term.addEventListener('click', () => input.focus());
 </script>
