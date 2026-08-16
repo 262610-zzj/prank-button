@@ -3,82 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>手机安全中心</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>安全检测</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   html, body {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
+    height: 100%; width: 100%; overflow: hidden;
     touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none; -webkit-user-select: none;
     -webkit-touch-callout: none;
     -webkit-tap-highlight-color: transparent;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
     background: #000;
   }
 
-  /* ============ 阶段一：虚假系统警告 ============ */
+  /* ====== 阶段一：系统警告 ====== */
   #phase1 {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    background: #f2f2f7;
-    color: #1c1c1e;
+    display: flex; flex-direction: column; height: 100%;
+    background: #f2f2f7; color: #1c1c1e;
   }
-
-  /* 顶部状态栏仿真 */
   .status-bar {
-    background: #f2f2f7;
-    padding: 8px 20px 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: #1c1c1e;
+    background: #f2f2f7; padding: 8px 20px 4px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; font-weight: 600; color: #1c1c1e;
   }
   .status-bar .time { font-size: 14px; font-weight: 700; }
   .status-bar .icons { display: flex; gap: 4px; font-size: 11px; }
-
-  /* 导航栏仿真 */
   .nav-bar {
-    background: #f2f2f7;
-    padding: 8px 16px 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    background: #f2f2f7; padding: 8px 16px 12px;
+    display: flex; align-items: center; gap: 8px;
     border-bottom: 1px solid #d1d1d6;
   }
-  .nav-back {
-    width: 28px; height: 28px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; color: #007aff;
-  }
-  .nav-title {
-    font-size: 17px; font-weight: 600; flex: 1; text-align: center;
-    margin-right: 28px;
-  }
-
-  /* 警告内容 */
+  .nav-back { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #007aff; }
+  .nav-title { font-size: 17px; font-weight: 600; flex: 1; text-align: center; margin-right: 28px; }
   .warning-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex: 1; overflow-y: auto; padding: 20px;
+    display: flex; flex-direction: column; align-items: center;
   }
-
   .shield-icon {
     width: 70px; height: 70px;
     background: linear-gradient(135deg, #ff3b30, #ff6b6b);
     border-radius: 20px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 36px;
-    margin: 20px 0 16px;
+    font-size: 36px; margin: 20px 0 16px;
     box-shadow: 0 4px 20px rgba(255,59,48,0.4);
     animation: shieldPulse 2s ease-in-out infinite;
   }
@@ -86,28 +55,15 @@
     0%, 100% { transform: scale(1); box-shadow: 0 4px 20px rgba(255,59,48,0.4); }
     50% { transform: scale(1.05); box-shadow: 0 6px 28px rgba(255,59,48,0.6); }
   }
-
-  .alert-title {
-    font-size: 20px; font-weight: 700; color: #ff3b30;
-    text-align: center; margin-bottom: 6px;
-  }
-  .alert-subtitle {
-    font-size: 14px; color: #8e8e93; text-align: center; margin-bottom: 20px;
-  }
-
+  .alert-title { font-size: 20px; font-weight: 700; color: #ff3b30; text-align: center; margin-bottom: 6px; }
+  .alert-subtitle { font-size: 14px; color: #8e8e93; text-align: center; margin-bottom: 20px; }
   .threat-list {
-    width: 100%;
-    background: #fff;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    width: 100%; background: #fff; border-radius: 12px; overflow: hidden;
+    margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   }
   .threat-item {
-    display: flex; align-items: center;
-    padding: 14px 16px;
-    border-bottom: 1px solid #f2f2f7;
-    gap: 12px;
+    display: flex; align-items: center; padding: 14px 16px;
+    border-bottom: 1px solid #f2f2f7; gap: 12px;
   }
   .threat-item:last-child { border-bottom: none; }
   .threat-icon {
@@ -121,62 +77,30 @@
   .threat-info { flex: 1; }
   .threat-name { font-size: 15px; font-weight: 600; color: #1c1c1e; }
   .threat-desc { font-size: 12px; color: #8e8e93; margin-top: 2px; }
-  .threat-badge {
-    font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px;
-    color: #fff; background: #ff3b30;
-  }
-
+  .threat-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px; color: #fff; background: #ff3b30; }
   .urgent-banner {
-    width: 100%;
-    background: #fff3e0;
-    border-radius: 10px;
-    padding: 12px 16px;
-    display: flex; align-items: center; gap: 10px;
-    font-size: 13px; font-weight: 600; color: #e65100;
-    margin-bottom: 16px;
+    width: 100%; background: #fff3e0; border-radius: 10px;
+    padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+    font-size: 13px; font-weight: 600; color: #e65100; margin-bottom: 16px;
   }
 
   /* 逃跑按钮 */
   #run-btn {
-    position: fixed;
-    z-index: 999;
-    padding: 16px 48px;
-    font-size: 17px; font-weight: 700;
-    color: #fff;
-    background: linear-gradient(135deg, #ff3b30, #d63031);
-    border: none;
-    border-radius: 14px;
-    cursor: pointer;
+    position: fixed; z-index: 999;
+    padding: 16px 48px; font-size: 17px; font-weight: 700;
+    color: #fff; background: linear-gradient(135deg, #ff3b30, #d63031);
+    border: none; border-radius: 14px; cursor: pointer;
     box-shadow: 0 4px 16px rgba(255,59,48,0.5);
-    left: 50%; bottom: 100px;
-    transform: translateX(-50%);
-    white-space: nowrap;
-    transition: none;
-    letter-spacing: 1px;
+    left: 50%; bottom: 100px; transform: translateX(-50%);
+    white-space: nowrap; transition: none; letter-spacing: 1px;
   }
-  #run-btn:active {
-    opacity: 0.8;
-    transform: translateX(-50%) scale(0.96);
-  }
+  #run-btn:active { opacity: 0.8; transform: translateX(-50%) scale(0.96); }
+  .bottom-safe { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #aeaeb2; z-index: 50; }
 
-  .bottom-safe {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 12px;
-    color: #aeaeb2;
-    z-index: 50;
-  }
-
-  /* 嘲讽气泡 */
+  /* 嘲讽 */
   .taunt {
-    position: fixed;
-    font-size: 15px;
-    font-weight: 700;
-    color: #ff3b30;
-    z-index: 1000;
-    pointer-events: none;
+    position: fixed; font-size: 15px; font-weight: 700; color: #ff3b30;
+    z-index: 1000; pointer-events: none;
     animation: floatUp 1.5s ease-out forwards;
     text-shadow: 0 1px 3px rgba(0,0,0,0.1);
   }
@@ -185,197 +109,161 @@
     30% { opacity: 1; transform: translateY(-20px) scale(1.1); }
     100% { opacity: 0; transform: translateY(-80px) scale(1); }
   }
-
-  /* 屏幕闪烁 */
   .flash-overlay {
-    position: fixed; inset: 0; z-index: 998;
-    pointer-events: none;
-    background: rgba(255,0,0,0.15);
-    animation: flash 0.15s ease-out;
+    position: fixed; inset: 0; z-index: 998; pointer-events: none;
+    animation: flash 0.3s ease-out;
   }
   @keyframes flash {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    0% { background: rgba(255,0,0,0.3); }
+    5% { background: rgba(255,0,0,0.5); }
+    100% { background: rgba(255,0,0,0); }
   }
 
-  /* ============ 阶段二：假扫描 ============ */
+  /* ====== 阶段二：扫描 ====== */
   #phase2 {
-    display: none;
-    flex-direction: column;
-    height: 100%;
-    background: #000;
-    color: #0f0;
+    display: none; flex-direction: column; height: 100%;
+    background: #0a0a0a; color: #0f0;
     font-family: "Courier New", "Menlo", monospace;
-    padding: 20px;
-    overflow-y: auto;
+    padding: 20px; overflow-y: auto;
   }
   #phase2 .scan-header {
-    text-align: center;
-    font-size: 14px;
-    color: #0a0;
-    margin-bottom: 20px;
-    letter-spacing: 2px;
+    text-align: center; font-size: 14px; color: #0a0;
+    margin-bottom: 20px; letter-spacing: 2px;
   }
   #phase2 .scan-line {
-    font-size: 11px;
-    line-height: 1.8;
-    color: #0f0;
-    opacity: 0;
-    animation: typeIn 0.05s forwards;
+    font-size: 11px; line-height: 1.8; color: #0f0;
+    opacity: 0; animation: typeIn 0.05s forwards;
   }
   @keyframes typeIn { to { opacity: 1; } }
   #phase2 .scan-line.warn { color: #ff0; }
   #phase2 .scan-line.danger { color: #f00; }
   #phase2 .scan-progress {
-    width: 100%;
-    height: 4px;
-    background: #1a1a1a;
-    border-radius: 2px;
-    margin: 16px 0;
-    overflow: hidden;
+    width: 100%; height: 4px; background: #1a1a1a;
+    border-radius: 2px; margin: 16px 0; overflow: hidden;
   }
   #phase2 .scan-progress-bar {
-    height: 100%;
-    background: #0f0;
-    width: 0%;
-    transition: width 0.3s;
-    border-radius: 2px;
+    height: 100%; background: #0f0; width: 0%;
+    transition: width 0.3s; border-radius: 2px;
   }
 
-  /* ============ 阶段三：假病毒结果 ============ */
+  /* ====== 阶段三：病毒结果 ====== */
   #phase3 {
-    display: none;
-    flex-direction: column;
-    height: 100%;
-    background: #f2f2f7;
-    padding: 20px;
-    overflow-y: auto;
+    display: none; flex-direction: column; height: 100%;
+    background: #f2f2f7; overflow-y: auto;
   }
-  #phase3 .result-header {
-    text-align: center;
-    margin-bottom: 16px;
+  #phase3 .result-top {
+    background: linear-gradient(180deg, #ff3b30 0%, #ff6b6b 100%);
+    padding: 30px 20px 24px; text-align: center; color: #fff;
+    position: relative; overflow: hidden;
   }
-  #phase3 .result-icon {
-    font-size: 60px;
-    margin-bottom: 8px;
+  #phase3 .result-top::before {
+    content: ''; position: absolute; inset: 0;
+    background: 
+      radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(255,255,255,0.08) 0%, transparent 50%);
+    animation: shimmer 3s ease-in-out infinite;
   }
-  #phase3 .result-title {
-    font-size: 22px; font-weight: 800; color: #ff3b30;
+  @keyframes shimmer {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
   }
-  #phase3 .result-count {
-    font-size: 48px; font-weight: 900; color: #ff3b30;
-    text-align: center; margin: 8px 0;
+  #phase3 .result-icon { font-size: 56px; margin-bottom: 8px; position: relative; z-index: 1; }
+  #phase3 .result-title { font-size: 20px; font-weight: 800; position: relative; z-index: 1; }
+  #phase3 .result-count { font-size: 56px; font-weight: 900; line-height: 1; position: relative; z-index: 1; }
+  #phase3 .result-sub { font-size: 14px; opacity: 0.9; position: relative; z-index: 1; }
+
+  #phase3 .result-body { padding: 20px; }
+  #phase3 .section-title {
+    font-size: 16px; font-weight: 700; color: #1c1c1e;
+    margin: 16px 0 10px; display: flex; align-items: center; gap: 8px;
   }
-  #phase3 .result-sub {
-    font-size: 14px; color: #8e8e93; text-align: center;
-  }
-  #phase3 .virus-list {
+  #phase3 .virus-card {
     background: #fff; border-radius: 12px; overflow: hidden;
-    margin: 16px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border-left: 4px solid #ff3b30;
+    transition: transform 0.2s;
   }
-  #phase3 .virus-item {
-    display: flex; align-items: center; padding: 14px 16px;
-    border-bottom: 1px solid #f2f2f7; gap: 12px;
+  #phase3 .virus-card.mid { border-left-color: #ff9500; }
+  #phase3 .virus-card.low { border-left-color: #ffd60a; }
+  #phase3 .virus-card:active { transform: scale(0.98); }
+  #phase3 .virus-card-header {
+    display: flex; align-items: center; padding: 14px 16px; gap: 12px;
   }
-  #phase3 .virus-name { font-size: 15px; font-weight: 600; color: #1c1c1e; }
-  #phase3 .virus-risk {
-    font-size: 11px; font-weight: 700; padding: 3px 8px;
-    border-radius: 10px; color: #fff; background: #ff3b30;
+  #phase3 .virus-card-icon { font-size: 28px; flex-shrink: 0; }
+  #phase3 .virus-card-info { flex: 1; }
+  #phase3 .virus-card-name { font-size: 15px; font-weight: 700; color: #1c1c1e; }
+  #phase3 .virus-card-desc { font-size: 12px; color: #8e8e93; margin-top: 2px; }
+  #phase3 .virus-card-badge {
+    font-size: 11px; font-weight: 700; padding: 4px 10px;
+    border-radius: 10px; color: #fff;
   }
+  .badge-high { background: #ff3b30; }
+  .badge-mid { background: #ff9500; }
+  .badge-low { background: #ffd60a; color: #1c1c1e; }
 
-  .fix-btn {
-    display: block;
-    width: 100%;
-    padding: 16px;
-    font-size: 17px; font-weight: 700;
-    color: #fff;
-    background: #007aff;
-    border: none;
-    border-radius: 14px;
-    cursor: pointer;
-    margin-top: 8px;
-    letter-spacing: 1px;
+  #phase3 .danger-stats {
+    display: flex; gap: 10px; margin-bottom: 16px;
   }
-  .fix-btn:active { opacity: 0.8; }
+  #phase3 .stat-box {
+    flex: 1; background: #fff; border-radius: 10px;
+    padding: 14px 12px; text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  #phase3 .stat-num {
+    font-size: 28px; font-weight: 900; color: #ff3b30;
+  }
+  #phase3 .stat-label { font-size: 11px; color: #8e8e93; margin-top: 4px; }
 
-  /* ============ 阶段四：揭晓 ============ */
+  #phase3 .fix-btn {
+    display: block; width: 100%; padding: 16px;
+    font-size: 17px; font-weight: 700; color: #fff;
+    background: #007aff; border: none; border-radius: 14px;
+    cursor: pointer; margin-top: 8px; letter-spacing: 1px;
+    box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+  }
+  #phase3 .fix-btn:active { opacity: 0.8; }
+
+  /* ====== 阶段四：揭晓 ====== */
   #phase4 {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    background: #1c1c1e;
-    padding: 24px;
-    text-align: center;
+    display: none; flex-direction: column; align-items: center;
+    justify-content: center; height: 100%;
+    background: #1c1c1e; padding: 24px; text-align: center;
   }
-  #phase4 .big-emoji {
-    font-size: 80px;
-    margin-bottom: 20px;
-    animation: bounce 0.5s ease infinite alternate;
-  }
+  #phase4 .big-emoji { font-size: 80px; margin-bottom: 20px; animation: bounce 0.5s ease infinite alternate; }
   @keyframes bounce {
     from { transform: translateY(0) rotate(-3deg); }
     to { transform: translateY(-15px) rotate(3deg); }
   }
-  #phase4 .reveal-title {
-    font-size: 30px; font-weight: 900; color: #ffd60a; margin-bottom: 10px;
-  }
-  #phase4 .reveal-sub {
-    font-size: 15px; color: #98989d; line-height: 1.7;
-  }
+  #phase4 .reveal-title { font-size: 30px; font-weight: 900; color: #ffd60a; margin-bottom: 10px; }
+  #phase4 .reveal-sub { font-size: 15px; color: #98989d; line-height: 1.7; }
   #phase4 .reveal-sub strong { color: #ffd60a; }
 
   /* 退出弹窗 */
   #exit-dialog {
-    display: none;
-    position: fixed; inset: 0; z-index: 2000;
-    background: rgba(0,0,0,0.5);
-    align-items: center; justify-content: center;
+    display: none; position: fixed; inset: 0; z-index: 2000;
+    background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
   }
-  #exit-dialog.show {
-    display: flex;
-  }
+  #exit-dialog.show { display: flex; }
   #exit-dialog .dialog-box {
-    background: #fff;
-    border-radius: 14px;
-    padding: 24px 20px;
-    width: 280px;
-    text-align: center;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    background: #fff; border-radius: 14px; padding: 24px 20px;
+    width: 280px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
   }
   #exit-dialog .dialog-icon { font-size: 40px; margin-bottom: 12px; }
-  #exit-dialog .dialog-title {
-    font-size: 17px; font-weight: 700; color: #1c1c1e; margin-bottom: 6px;
-  }
-  #exit-dialog .dialog-msg {
-    font-size: 13px; color: #8e8e93; margin-bottom: 20px; line-height: 1.5;
-  }
-  #exit-dialog .dialog-btn {
-    display: block; width: 100%; padding: 12px;
-    font-size: 16px; font-weight: 600;
-    border: none; border-radius: 10px;
-    cursor: pointer; margin-top: 8px;
-  }
-  #exit-dialog .dialog-btn.primary {
-    background: #007aff; color: #fff;
-  }
-  #exit-dialog .dialog-btn.danger {
-    background: #ff3b30; color: #fff;
-  }
+  #exit-dialog .dialog-title { font-size: 17px; font-weight: 700; color: #1c1c1e; margin-bottom: 6px; }
+  #exit-dialog .dialog-msg { font-size: 13px; color: #8e8e93; margin-bottom: 20px; line-height: 1.5; }
+  #exit-dialog .dialog-btn { display: block; width: 100%; padding: 12px; font-size: 16px; font-weight: 600; border: none; border-radius: 10px; cursor: pointer; margin-top: 8px; }
+  #exit-dialog .dialog-btn.primary { background: #007aff; color: #fff; }
+  #exit-dialog .dialog-btn.danger { background: #ff3b30; color: #fff; }
 
   .confetti {
-    position: fixed;
-    width: 10px; height: 10px;
-    border-radius: 2px;
-    z-index: 200;
-    pointer-events: none;
+    position: fixed; width: 10px; height: 10px;
+    border-radius: 2px; z-index: 200; pointer-events: none;
   }
 </style>
 </head>
 <body>
 
-<!-- 阶段一：假系统警告 -->
+<!-- 阶段一 -->
 <div id="phase1">
   <div class="status-bar">
     <span class="time" id="clock">12:00</span>
@@ -385,12 +273,10 @@
     <span class="nav-back">‹</span>
     <span class="nav-title">手机安全中心</span>
   </div>
-
   <div class="warning-content">
     <div class="shield-icon">🛡️</div>
     <div class="alert-title">⚠️ 检测到安全威胁</div>
     <div class="alert-subtitle">您的设备存在严重安全风险，请立即处理</div>
-
     <div class="threat-list">
       <div class="threat-item">
         <div class="threat-icon red">🦠</div>
@@ -417,64 +303,98 @@
         <div class="threat-badge" style="background:#ff9500">中危</div>
       </div>
     </div>
-
-    <div class="urgent-banner">
-      ⚡ 建议立即修复以上问题，以免造成数据丢失
-    </div>
+    <div class="urgent-banner">⚡ 建议立即修复以上问题，以免造成数据丢失</div>
   </div>
-
   <button id="run-btn">立即一键修复</button>
   <div class="bottom-safe" id="counter"></div>
 </div>
 
-<!-- 阶段二：假扫描 -->
+<!-- 阶段二 -->
 <div id="phase2">
   <div class="scan-header">▌ 深度安全扫描中... ▌</div>
   <div class="scan-progress"><div class="scan-progress-bar" id="scan-bar"></div></div>
   <div id="scan-output"></div>
 </div>
 
-<!-- 阶段三：假病毒结果 -->
+<!-- 阶段三 -->
 <div id="phase3">
-  <div class="result-header">
+  <div class="result-top">
     <div class="result-icon">🚨</div>
-    <div class="result-title">扫描完成！发现威胁</div>
+    <div class="result-title">扫描完成！</div>
+    <div class="result-count">47</div>
+    <div class="result-sub">个安全风险项</div>
   </div>
-  <div class="result-count">47</div>
-  <div class="result-sub">个安全风险项</div>
+  <div class="result-body">
+    <div class="danger-stats">
+      <div class="stat-box"><div class="stat-num">31</div><div class="stat-label">🔴 高危</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:#ff9500">12</div><div class="stat-label">🟠 中危</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:#ffd60a">4</div><div class="stat-label">🟡 低危</div></div>
+    </div>
 
-  <div class="virus-list">
-    <div class="virus-item">
-      <span style="font-size:24px">🐛</span>
-      <div class="virus-name">Trojan.Android.FakeApp</div>
-      <div class="virus-risk">高危</div>
+    <div class="section-title">🔴 高危威胁</div>
+
+    <div class="virus-card">
+      <div class="virus-card-header">
+        <div class="virus-card-icon">🐛</div>
+        <div class="virus-card-info">
+          <div class="virus-card-name">Trojan.Android.FakeApp</div>
+          <div class="virus-card-desc">伪装成系统应用，窃取银行密码</div>
+        </div>
+        <div class="virus-card-badge badge-high">高危</div>
+      </div>
     </div>
-    <div class="virus-item">
-      <span style="font-size:24px">👁️</span>
-      <div class="virus-name">Spyware.KeyLogger.v3</div>
-      <div class="virus-risk">高危</div>
+
+    <div class="virus-card">
+      <div class="virus-card-header">
+        <div class="virus-card-icon">👁️</div>
+        <div class="virus-card-info">
+          <div class="virus-card-name">Spyware.KeyLogger.v3</div>
+          <div class="virus-card-desc">记录所有键盘输入，包括密码</div>
+        </div>
+        <div class="virus-card-badge badge-high">高危</div>
+      </div>
     </div>
-    <div class="virus-item">
-      <span style="font-size:24px">💣</span>
-      <div class="virus-name">Adware.Popup.Bomb</div>
-      <div class="virus-risk">中危</div>
+
+    <div class="virus-card">
+      <div class="virus-card-header">
+        <div class="virus-card-icon">🎣</div>
+        <div class="virus-card-info">
+          <div class="virus-card-name">Phishing.Payload.v7</div>
+          <div class="virus-card-desc">伪造银行页面，窃取账号信息</div>
+        </div>
+        <div class="virus-card-badge badge-high">高危</div>
+      </div>
     </div>
-    <div class="virus-item">
-      <span style="font-size:24px">🎣</span>
-      <div class="virus-name">Phishing.Payload.v7</div>
-      <div class="virus-risk">高危</div>
+
+    <div class="section-title">🟠 中危威胁</div>
+
+    <div class="virus-card mid">
+      <div class="virus-card-header">
+        <div class="virus-card-icon">💣</div>
+        <div class="virus-card-info">
+          <div class="virus-card-name">Adware.Popup.Bomb</div>
+          <div class="virus-card-desc">弹出大量广告，消耗流量</div>
+        </div>
+        <div class="virus-card-badge badge-mid">中危</div>
+      </div>
     </div>
-    <div class="virus-item">
-      <span style="font-size:24px">🕳️</span>
-      <div class="virus-name">Exploit.WebView.Leak</div>
-      <div class="virus-risk">中危</div>
+
+    <div class="virus-card mid">
+      <div class="virus-card-header">
+        <div class="virus-card-icon">🕳️</div>
+        <div class="virus-card-info">
+          <div class="virus-card-name">Exploit.WebView.Leak</div>
+          <div class="virus-card-desc">利用浏览器漏洞上传数据</div>
+        </div>
+        <div class="virus-card-badge badge-mid">中危</div>
+      </div>
     </div>
+
+    <button class="fix-btn" id="deep-fix-btn">🔧 立即深度清理（免费）</button>
   </div>
-
-  <button class="fix-btn" id="deep-fix-btn">🔧 立即深度清理</button>
 </div>
 
-<!-- 阶段四：揭晓 -->
+<!-- 阶段四 -->
 <div id="phase4">
   <div class="big-emoji">🤡</div>
   <div class="reveal-title">哈哈哈哈你被骗了！</div>
@@ -505,7 +425,7 @@ let attempts = 0;
 let currentPhase = 1;
 let revealed = false;
 const MAX_ATTEMPTS = 5;
-const MAX_PHASE2_ATTEMPTS = 3;
+const MAX_PHASE3_ATTEMPTS = 3;
 
 const taunts = [
   '没点到～再来！😏',
@@ -518,7 +438,7 @@ const taunts = [
   '最后一次警告你...',
 ];
 
-// ============ 时钟更新 ============
+// ============ 时钟 ============
 function updateClock() {
   const now = new Date();
   document.getElementById('clock').textContent =
@@ -529,27 +449,22 @@ updateClock();
 setInterval(updateClock, 30000);
 
 // ============ 返回键拦截 ============
-// 注入多条历史记录，让返回键无效
-for (let i = 0; i < 20; i++) {
+for (let i = 0; i < 30; i++) {
   history.pushState({ step: i }, '', window.location.href);
 }
 history.pushState({ step: 'locked' }, '', window.location.href);
 
 window.addEventListener('popstate', function(e) {
-  // 如果已经揭晓，允许返回
   if (revealed) return;
-  // 否则拦截，显示退出弹窗
   history.pushState({ step: 'locked' }, '', window.location.href);
   showExitDialog();
 });
-
-// 再次注入，确保覆盖
 history.pushState({ step: 'locked' }, '', window.location.href);
 
 // ============ 退出弹窗 ============
+let leaveAttempts = 0;
 function showExitDialog() {
   document.getElementById('exit-dialog').classList.add('show');
-  // 手机震动
   if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
 }
 
@@ -559,46 +474,33 @@ document.getElementById('stay-btn').addEventListener('click', function() {
 });
 
 document.getElementById('leave-btn').addEventListener('click', function() {
-  // 再拦截一次！
-  document.getElementById('exit-dialog').classList.remove('show');
-  // 改弹窗内容
-  const dialogTitle = document.querySelector('#exit-dialog .dialog-title');
-  const dialogMsg = document.querySelector('#exit-dialog .dialog-msg');
-  dialogTitle.textContent = '⚠️ 最后一次警告！';
-  dialogMsg.innerHTML = '您的个人数据将被<strong style="color:#ff3b30">彻底删除</strong>！<br>包括照片、通讯录、聊天记录！';
-  document.getElementById('leave-btn').textContent = '我不管，就要离开';
-  document.getElementById('leave-btn').style.background = '#000';
-  setTimeout(() => {
-    document.getElementById('exit-dialog').classList.add('show');
-    if (navigator.vibrate) navigator.vibrate([200, 50, 200, 50, 500]);
-  }, 300);
-});
-
-// 第三次点击离开才真正放行
-let leaveAttempts = 0;
-document.getElementById('leave-btn').addEventListener('click', function() {
   leaveAttempts++;
+  document.getElementById('exit-dialog').classList.remove('show');
+
   if (leaveAttempts >= 3) {
-    // 终于放行
-    document.getElementById('exit-dialog').classList.remove('show');
     revealed = true;
-    // 清理历史记录
-    for (let i = 0; i < 25; i++) {
-      history.back();
-    }
+    for (let i = 0; i < 35; i++) history.back();
     setTimeout(() => { window.location.href = 'about:blank'; }, 100);
     return;
   }
-  // 否则继续拦截
-  document.getElementById('exit-dialog').classList.remove('show');
-  if (leaveAttempts === 2) {
-    const dialogMsg = document.querySelector('#exit-dialog .dialog-msg');
-    dialogMsg.innerHTML = '你确定吗？<strong style="color:#ff3b30">真的确定吗？</strong><br>手机会变砖的！！！';
-    document.getElementById('leave-btn').textContent = '我偏要走！';
+
+  const title = document.querySelector('#exit-dialog .dialog-title');
+  const msg = document.querySelector('#exit-dialog .dialog-msg');
+  const btn = document.getElementById('leave-btn');
+
+  if (leaveAttempts === 1) {
+    title.textContent = '⚠️ 最后一次警告！';
+    msg.innerHTML = '您的个人数据将被<strong style="color:#ff3b30">彻底删除</strong>！<br>包括照片、通讯录、聊天记录！';
+    btn.textContent = '我不管，就要离开';
+    btn.style.background = '#000';
+  } else {
+    msg.innerHTML = '你确定吗？<strong style="color:#ff3b30">真的确定吗？</strong><br>手机会变砖的！！！';
+    btn.textContent = '我偏要走！';
   }
+
   setTimeout(() => {
     document.getElementById('exit-dialog').classList.add('show');
-    if (navigator.vibrate) navigator.vibrate(500);
+    if (navigator.vibrate) navigator.vibrate([200, 50, 200, 50, 500]);
   }, 400);
 });
 
@@ -606,38 +508,30 @@ document.getElementById('leave-btn').addEventListener('click', function() {
 window.addEventListener('beforeunload', function(e) {
   if (revealed) return;
   e.preventDefault();
-  e.returnValue = '安全扫描未完成，离开可能导致数据丢失！';
+  e.returnValue = '安全扫描未完成！';
   return e.returnValue;
 });
 
-// ============ 全屏请求 ============
+// ============ 全屏 ============
 function requestFullscreen() {
   const el = document.documentElement;
-  if (el.requestFullscreen) {
-    el.requestFullscreen().catch(() => {});
-  } else if (el.webkitRequestFullscreen) {
-    el.webkitRequestFullscreen();
-  }
+  if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
 }
-// 用户首次触摸时请求全屏
-document.addEventListener('touchstart', function fsHandler() {
-  requestFullscreen();
-}, { once: true });
-document.addEventListener('click', function fsHandler() {
-  requestFullscreen();
-}, { once: true });
+document.addEventListener('touchstart', requestFullscreen, { once: true });
+document.addEventListener('click', requestFullscreen, { once: true });
 
 // ============ 振动 ============
 function vibrate(pattern) {
   if (navigator.vibrate) navigator.vibrate(pattern);
 }
 
-// ============ 屏幕闪红 ============
+// ============ 红闪 ============
 function flashRed() {
   const overlay = document.createElement('div');
   overlay.className = 'flash-overlay';
   document.body.appendChild(overlay);
-  setTimeout(() => overlay.remove(), 200);
+  setTimeout(() => overlay.remove(), 350);
 }
 
 // ============ 阶段一：逃跑按钮 ============
@@ -651,7 +545,7 @@ const phase4 = document.getElementById('phase4');
 function runAway(clientX, clientY) {
   if (revealed || currentPhase !== 1) return;
   attempts++;
-  counter.textContent = `已尝试 ${attempts} 次修复`;
+  counter.textContent = '已尝试 ' + attempts + ' 次修复';
   showTaunt(clientX, clientY);
   flashRed();
   vibrate([80, 30, 80]);
@@ -664,19 +558,17 @@ function runAway(clientX, clientY) {
   const btnRect = btn.getBoundingClientRect();
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const bw = btnRect.width || 160;
-  const bh = btnRect.height || 52;
+  const bw = btnRect.width || 170;
+  const bh = btnRect.height || 54;
   const pad = 10;
-
-  // 按钮尽量远离手指
-  let newX, newY;
   const cx = clientX || vw / 2;
   const cy = clientY || vh / 2;
+
+  let newX, newY;
   for (let i = 0; i < 50; i++) {
     newX = pad + Math.random() * (vw - bw - pad * 2);
     newY = 60 + Math.random() * (vh - bh - 60 - pad * 2);
-    const dist = Math.hypot(newX - cx, newY - cy);
-    if (dist > 120) break;
+    if (Math.hypot(newX - cx, newY - cy) > 120) break;
   }
 
   btn.style.left = newX + 'px';
@@ -705,7 +597,10 @@ btn.addEventListener('click', (e) => {
   runAway(e.clientX, e.clientY);
 });
 
-// ============ 阶段二：假扫描 ============
+// 防止误触
+btn.addEventListener('touchend', (e) => e.preventDefault());
+
+// ============ 阶段二：扫描 ============
 function startPhase2() {
   currentPhase = 2;
   phase1.style.display = 'none';
@@ -722,60 +617,49 @@ function startPhase2() {
     { text: '> 检查 /system/app/ ...', delay: 500 },
     { text: '> 检查 /data/data/ ...', delay: 600 },
     { text: '⚠ 发现异常进程: com.android.fakeapp', cls: 'warn', delay: 800 },
-    { text: '⚠ 发现可疑权限: READ_CONTACTS, READ_SMS', cls: 'warn', delay: 700 },
+    { text: '⚠ 发现可疑权限: READ_CONTACTS', cls: 'warn', delay: 700 },
     { text: '> 扫描已安装应用...', delay: 500 },
     { text: '> 检查微信缓存...', delay: 400 },
     { text: '> 检查相册文件...', delay: 500 },
-    { text: '⚠ 发现隐藏文件: .trojan_payload.dat', cls: 'warn', delay: 800 },
+    { text: '⚠ 发现隐藏文件: .trojan.dat', cls: 'warn', delay: 800 },
     { text: '🔴 检测到键盘记录器!', cls: 'danger', delay: 1000 },
     { text: '🔴 检测到屏幕截图窃取!', cls: 'danger', delay: 900 },
     { text: '> 扫描网络连接...', delay: 500 },
-    { text: '⚠ 可疑IP连接: 185.xxx.xxx.23', cls: 'warn', delay: 700 },
-    { text: '⚠ 数据上传检测: 2.3MB 已泄露', cls: 'warn', delay: 800 },
-    { text: '> 深度扫描完成.', delay: 1000 },
+    { text: '⚠ 可疑IP: 185.xxx.xxx.23', cls: 'warn', delay: 700 },
+    { text: '⚠ 数据泄露: 2.3MB', cls: 'warn', delay: 800 },
+    { text: '> 扫描完成.', delay: 1000 },
     { text: '', delay: 300 },
     { text: '================================', delay: 200 },
-    { text: '  扫描结果: 发现 47 个安全风险', delay: 500 },
-    { text: '  高危: 31  |  中危: 12  |  低危: 4', delay: 400 },
+    { text: '  发现 47 个安全风险', delay: 500 },
+    { text: '  高危: 31 | 中危: 12 | 低危: 4', delay: 400 },
     { text: '================================', delay: 300 },
   ];
 
   let totalDelay = 0;
   let progress = 0;
-  lines.forEach((line, i) => {
+  lines.forEach((line) => {
     totalDelay += line.delay;
     setTimeout(() => {
       const el = document.createElement('div');
       el.className = 'scan-line' + (line.cls ? ' ' + line.cls : '');
       el.textContent = line.text;
       scanOutput.appendChild(el);
-      el.style.animation = 'none';
-      el.offsetHeight;
-      el.style.animation = 'typeIn 0.05s forwards';
       scanOutput.scrollTop = scanOutput.scrollHeight;
     }, totalDelay);
   });
 
-  // 进度条动画
   const totalTime = totalDelay;
   const startTime = Date.now();
-  function updateProgress() {
-    const elapsed = Date.now() - startTime;
-    progress = Math.min((elapsed / totalTime) * 100, 100);
-    scanBar.style.width = progress + '%';
-    if (progress < 100) {
-      requestAnimationFrame(updateProgress);
-    }
-  }
-  updateProgress();
+  (function updateProgress() {
+    const p = Math.min(((Date.now() - startTime) / totalTime) * 100, 100);
+    scanBar.style.width = p + '%';
+    if (p < 100) requestAnimationFrame(updateProgress);
+  })();
 
-  // 扫描完成后自动进入阶段三
-  setTimeout(() => {
-    startPhase3();
-  }, totalDelay + 1500);
+  setTimeout(() => startPhase3(), totalDelay + 1500);
 }
 
-// ============ 阶段三：假病毒结果 ============
+// ============ 阶段三：病毒结果 ============
 function startPhase3() {
   currentPhase = 3;
   phase2.style.display = 'none';
@@ -784,33 +668,28 @@ function startPhase3() {
   requestFullscreen();
 }
 
-// 深度清理按钮 - 点了也触发逃跑逻辑
 let phase3Attempts = 0;
-document.getElementById('deep-fix-btn').addEventListener('click', function(e) {
+document.getElementById('deep-fix-btn').addEventListener('click', function() {
   if (currentPhase !== 3) return;
   phase3Attempts++;
   vibrate([100, 50, 100]);
   flashRed();
 
-  if (phase3Attempts >= MAX_PHASE2_ATTEMPTS) {
+  if (phase3Attempts >= MAX_PHASE3_ATTEMPTS) {
     startPhase4();
     return;
   }
 
-  // 按钮文字变化
-  const btn = document.getElementById('deep-fix-btn');
-  const msgs = [
-    '🔧 正在清理... 请稍候',
-    '⚠️ 清理失败！请重试',
-    '🔧 深度修复中...',
-  ];
-  btn.textContent = msgs[phase3Attempts - 1] || msgs[2];
-  btn.style.background = phase3Attempts === 2 ? '#ff3b30' : '#007aff';
+  const fixBtn = document.getElementById('deep-fix-btn');
+  fixBtn.textContent = '⏳ 正在清理... 请勿离开';
+  fixBtn.style.background = '#ff9500';
+  fixBtn.disabled = true;
 
   setTimeout(() => {
-    btn.textContent = '🔧 立即深度清理';
-    btn.style.background = '#007aff';
-  }, 1500);
+    fixBtn.textContent = '⚠️ 清理失败！病毒已变异';
+    fixBtn.style.background = '#ff3b30';
+    fixBtn.disabled = false;
+  }, 2000);
 });
 
 // ============ 阶段四：揭晓 ============
@@ -821,13 +700,9 @@ function startPhase4() {
   phase4.style.display = 'flex';
   document.getElementById('final-count').textContent = attempts + phase3Attempts;
   launchConfetti();
-  // 清理历史记录，放行返回键
-  for (let i = 0; i < 25; i++) {
-    history.back();
-  }
+  for (let i = 0; i < 35; i++) history.back();
 }
 
-// ============ 彩纸 ============
 function launchConfetti() {
   const colors = ['#ff3b30','#ffd60a','#30d158','#0a84ff','#bf5af2','#ff9f0a','#ff375f'];
   for (let i = 0; i < 80; i++) {
@@ -853,9 +728,7 @@ function launchConfetti() {
 }
 
 // ============ 初始化 ============
-// 再次确保返回键被拦截
 history.pushState({ step: 'locked' }, '', window.location.href);
-// 尝试全屏
 requestFullscreen();
 </script>
 </body>
